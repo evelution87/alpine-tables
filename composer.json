@@ -1,0 +1,54 @@
+{
+    "name": "evelution87/alpine-tables",
+    "description": "Data tables for Laravel using Alpine JS",
+    "keywords": [
+        "evelution87",
+        "alpine-tables"
+    ],
+    "homepage": "https://github.com/evelution87/alpine-tables",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Craig Eve",
+            "email": "craig@evelution.net",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "illuminate/support": "^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Evelution87\\AlpineTables\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Evelution87\\AlpineTables\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Evelution87\\AlpineTables\\AlpineTablesServiceProvider"
+            ],
+            "aliases": {
+                "AlpineTables": "Evelution87\\AlpineTables\\AlpineTablesFacade"
+            }
+        }
+    }
+}
