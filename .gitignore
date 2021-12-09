@@ -1,3 +1,6 @@
-
-# Project exclude paths
 /node_modules/
+/.github/
+/.idea/
+/package-lock.json
+/mix-manifest.json
+/.gitignore

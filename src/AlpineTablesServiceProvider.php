@@ -2,6 +2,8 @@
 
 namespace Evelution87\AlpineTables;
 
+use Evelution87\AlpineTables\View\AlpineTableComponent;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AlpineTablesServiceProvider extends ServiceProvider
@@ -17,7 +19,7 @@ class AlpineTablesServiceProvider extends ServiceProvider
         // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'alpine-tables');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'alpine-tables');
         // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
+        // $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -30,9 +32,9 @@ class AlpineTablesServiceProvider extends ServiceProvider
             ], 'views');*/
 
             // Publishing assets.
-            /*$this->publishes([
-                __DIR__.'/../resources/assets' => public_path('vendor/alpine-tables'),
-            ], 'assets');*/
+            $this->publishes([
+                __DIR__.'/../assets' => public_path('vendor/alpine-tables'),
+            ], 'assets');
 
             // Publishing the translation files.
             /*$this->publishes([
@@ -41,7 +43,12 @@ class AlpineTablesServiceProvider extends ServiceProvider
 
             // Registering package commands.
             // $this->commands([]);
+        } else {
+	
+	        Blade::component('alpine-table', AlpineTableComponent::class);
+        	
         }
+        
     }
 
     /**
