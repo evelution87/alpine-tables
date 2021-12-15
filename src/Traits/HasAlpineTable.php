@@ -15,8 +15,10 @@ trait HasAlpineTable {
 	
 	abstract public function alpineColumns();
 	
+	abstract public function alpineSearchColumns();
+	
 	public function _alpineColumns() {
-		return collect( $this->alpineColumns() )->pluckMany( [ 'key', 'label', 'filter', 'class' ] );
+		return collect( $this->alpineColumns() )->pluckMany( [ 'key', 'label', 'filter', 'class', 'format' ] );
 	}
 	
 	public function alpine( Request $request ) {
@@ -59,15 +61,15 @@ trait HasAlpineTable {
 		// Query Filters
 		foreach ( $filters as $filter => $value ) {
 			if ( $column = $columns->firstWhere( 'key', $filter ) ) {
-				if ( isset( $column[ 'query' ] ) ) {
-					if ( true === $column[ 'query' ] ) {
+				if ( isset( $column['query'] ) ) {
+					if ( true === $column['query'] ) {
 						$items->where( $filter, $value );
-					} else if ( is_scalar( $column[ 'query' ] ) ) {
-						$items->where( $column[ 'query' ], $value );
-					} else if ( is_callable( $column[ 'query' ] ) ) {
-						$column[ 'query' ]( $items, $value );
+					} else if ( is_scalar( $column['query'] ) ) {
+						$items->where( $column['query'], $value );
+					} else if ( is_callable( $column['query'] ) ) {
+						$column['query']( $items, $value );
 					}
-				} else if ( isset( $column[ 'collection' ] ) ) {
+				} else if ( isset( $column['collection'] ) ) {
 					$post_query = true;
 				}
 			}
@@ -75,11 +77,11 @@ trait HasAlpineTable {
 		
 		// Query Search
 		if ( !empty( $search ) && $query_search && !empty( $search_columns ) ) {
-			$items->where( function ( $query ) use ( $search_columns, $search ) {
+			$items->where( function( $query ) use ( $search_columns, $search ) {
 				foreach ( $search_columns as $column => $searchable ) {
 					if ( count( $relation = explode( '.', $column ) ) > 1 ) {
-						$query->orWhereHas( $relation[ 0 ], function ( Builder $query ) use ( $relation, $search ) {
-							$query->where( $relation[ 1 ], 'like', '%' . $search . '%' );
+						$query->orWhereHas( $relation[0], function( Builder $query ) use ( $relation, $search ) {
+							$query->where( $relation[1], 'like', '%' . $search . '%' );
 						} );
 					} else {
 						$query->orWhere( $column, 'like', '%' . $search . '%' );
@@ -114,13 +116,13 @@ trait HasAlpineTable {
 		if ( $post_query ) {
 			foreach ( $filters as $filter => $value ) {
 				if ( $column = $columns->firstWhere( 'key', $filter ) ) {
-					if ( isset( $column[ 'collection' ] ) ) {
-						if ( true === $column[ 'collection' ] ) {
+					if ( isset( $column['collection'] ) ) {
+						if ( true === $column['collection'] ) {
 							$items->where( $filter, $value );
-						} else if ( is_scalar( $column[ 'collection' ] ) ) {
-							$items->where( $column[ 'collection' ], $value );
-						} else if ( is_callable( $column[ 'collection' ] ) ) {
-							$column[ 'collection' ]( $items, $value );
+						} else if ( is_scalar( $column['collection'] ) ) {
+							$items->where( $column['collection'], $value );
+						} else if ( is_callable( $column['collection'] ) ) {
+							$column['collection']( $items, $value );
 						}
 					}
 				}
@@ -129,7 +131,7 @@ trait HasAlpineTable {
 		
 		// Collection Search
 		if ( !empty( $search ) && !$query_search && !empty( $search_columns ) ) {
-			$items = $items->filter( function ( $item ) use ( $search_columns, $search ) {
+			$items = $items->filter( function( $item ) use ( $search_columns, $search ) {
 				$matches = false;
 				foreach ( $search_columns as $column => $searchable ) {
 					if ( true === $searchable ) {
@@ -163,7 +165,7 @@ trait HasAlpineTable {
 			$items = $items->get();
 		}
 		
-		$items = $items->map( function ( $item ) {
+		$items = $items->map( function( $item ) {
 			return method_exists( $item, 'toAlpineTable' ) ? $item->toAlpineTable() : $item->toArray();
 		} )->values()->toArray();
 		
@@ -175,12 +177,12 @@ trait HasAlpineTable {
 		
 		switch ( $request->get ?? null ) {
 			case 'columns':
-				$return[ 'columns' ] = $this->_alpineColumns();
+				$return['columns'] = $this->_alpineColumns();
 			break;
 		}
 		
 		if ( config( 'app.debug', false ) ) {
-			$return[ 'debug' ] = compact( 'page', 'per_page', 'skip', 'sort_by', 'sort_asc' );
+			$return['debug'] = compact( 'page', 'per_page', 'skip', 'sort_by', 'sort_asc' );
 		}
 		
 		return $return;

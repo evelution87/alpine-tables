@@ -4,6 +4,7 @@ namespace Evelution87\AlpineTables;
 
 use Evelution87\AlpineTables\View\AlpineTableComponent;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AlpineTablesServiceProvider extends ServiceProvider
@@ -20,6 +21,8 @@ class AlpineTablesServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'alpine-tables');
         // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         // $this->loadRoutesFrom(__DIR__.'/routes.php');
+	    
+	    $this->registerRoutes();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -50,6 +53,12 @@ class AlpineTablesServiceProvider extends ServiceProvider
         }
         
     }
+	
+	protected function registerRoutes() {
+		Route::middleware( [ 'web' ] )->group( function() {
+			$this->loadRoutesFrom( __DIR__ . '/routes.php' );
+		} );
+	}
 
     /**
      * Register the application services.

@@ -5521,7 +5521,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
     route: data.route,
     columns: [],
     //data.columns,
-    items: null,
+    items: [],
     results: 0,
     total_results: 0,
     max_pages: 0,
@@ -5577,7 +5577,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
     getColumns: function getColumns() {
       var _this2 = this;
 
-      axios.post(this.route, {
+      window.axios.post(this.route, {
         get: 'columns'
       }).then(function (response) {
         _this2.columns = response.data;
@@ -5597,7 +5597,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         data.get = 'columns';
       }
 
-      axios.post(this.route, data).then(function (response) {
+      window.axios.post(this.route, data).then(function (response) {
         if (response.data.columns) {
           _this3.columns = response.data.columns;
         }
@@ -5653,6 +5653,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       }
 
       switch (_format) {
+        case 'date':
+          value = value.split('T')[0];
+          break;
+
         case 'currency':
           value = new Intl.NumberFormat('en-AU', {
             style: 'currency',
