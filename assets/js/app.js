@@ -1,10 +1,10 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/@alpinejs/persist/dist/module.esm.js":
-/*!*******************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/@alpinejs/persist/dist/module.esm.js ***!
-  \*******************************************************************************************************/
+/***/ "./node_modules/@alpinejs/persist/dist/module.esm.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@alpinejs/persist/dist/module.esm.js ***!
+  \***********************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -14,10 +14,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 // packages/persist/src/index.js
 function src_default(Alpine) {
-  Alpine.magic("persist", (el, {interceptor}) => {
+  let persist = () => {
     let alias;
     let storage = localStorage;
-    return interceptor((initialValue, getter, setter, path, key) => {
+    return Alpine.interceptor((initialValue, getter, setter, path, key) => {
       let lookup = alias || `_x_${path}`;
       let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
       setter(initial);
@@ -36,7 +36,9 @@ function src_default(Alpine) {
         return func;
       };
     });
-  });
+  };
+  Object.defineProperty(Alpine, "$persist", {get: () => persist()});
+  Alpine.magic("persist", persist);
 }
 function storageHas(key, storage) {
   return storage.getItem(key) !== null;
@@ -55,10 +57,10 @@ var module_default = src_default;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/alpinejs/dist/module.esm.js":
-/*!**********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/alpinejs/dist/module.esm.js ***!
-  \**********************************************************************************************/
+/***/ "./node_modules/alpinejs/dist/module.esm.js":
+/*!**************************************************!*\
+  !*** ./node_modules/alpinejs/dist/module.esm.js ***!
+  \**************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1517,16 +1519,30 @@ function onMutate(mutations) {
   addedAttributes.forEach((attrs, el) => {
     onAttributeAddeds.forEach((i) => i(el, attrs));
   });
-  for (let node of addedNodes) {
-    if (removedNodes.includes(node))
-      continue;
-    onElAddeds.forEach((i) => i(node));
-  }
   for (let node of removedNodes) {
     if (addedNodes.includes(node))
       continue;
     onElRemoveds.forEach((i) => i(node));
   }
+  addedNodes.forEach((node) => {
+    node._x_ignoreSelf = true;
+    node._x_ignore = true;
+  });
+  for (let node of addedNodes) {
+    if (removedNodes.includes(node))
+      continue;
+    if (!node.isConnected)
+      continue;
+    delete node._x_ignoreSelf;
+    delete node._x_ignore;
+    onElAddeds.forEach((i) => i(node));
+    node._x_ignore = true;
+    node._x_ignoreSelf = true;
+  }
+  addedNodes.forEach((node) => {
+    delete node._x_ignoreSelf;
+    delete node._x_ignore;
+  });
   addedNodes = null;
   removedNodes = null;
   addedAttributes = null;
@@ -1610,7 +1626,9 @@ function mergeProxies(objects) {
 function initInterceptors(data2) {
   let isObject = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
   let recurse = (obj, basePath = "") => {
-    Object.entries(obj).forEach(([key, value]) => {
+    Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, {value, enumerable}]) => {
+      if (enumerable === false || value === void 0)
+        return;
       let path = basePath === "" ? key : `${basePath}.${key}`;
       if (typeof value === "object" && value !== null && value._x_interceptor) {
         obj[key] = value.initialize(data2, path, key);
@@ -1684,6 +1702,24 @@ function injectMagics(obj, el) {
   return obj;
 }
 
+// packages/alpinejs/src/utils/error.js
+function tryCatch(el, expression, callback, ...args) {
+  try {
+    return callback(...args);
+  } catch (e) {
+    handleError(e, el, expression);
+  }
+}
+function handleError(error2, el, expression = void 0) {
+  Object.assign(error2, {el, expression});
+  console.warn(`Alpine Expression Error: ${error2.message}
+
+${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
+  setTimeout(() => {
+    throw error2;
+  }, 0);
+}
+
 // packages/alpinejs/src/evaluator.js
 function evaluate(el, expression, extras = {}) {
   let result;
@@ -1704,7 +1740,7 @@ function normalEvaluator(el, expression) {
   if (typeof expression === "function") {
     return generateEvaluatorFromFunction(dataStack, expression);
   }
-  let evaluator = generateEvaluatorFromString(dataStack, expression);
+  let evaluator = generateEvaluatorFromString(dataStack, expression, el);
   return tryCatch.bind(null, el, expression, evaluator);
 }
 function generateEvaluatorFromFunction(dataStack, func) {
@@ -1715,56 +1751,55 @@ function generateEvaluatorFromFunction(dataStack, func) {
   };
 }
 var evaluatorMemo = {};
-function generateFunctionFromString(expression) {
+function generateFunctionFromString(expression, el) {
   if (evaluatorMemo[expression]) {
     return evaluatorMemo[expression];
   }
   let AsyncFunction = Object.getPrototypeOf(async function() {
   }).constructor;
-  let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression) || /^(let|const)/.test(expression) ? `(() => { ${expression} })()` : expression;
-  let func = new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
+  let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression) || /^(let|const)\s/.test(expression) ? `(() => { ${expression} })()` : expression;
+  const safeAsyncFunction = () => {
+    try {
+      return new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
+    } catch (error2) {
+      handleError(error2, el, expression);
+      return Promise.resolve();
+    }
+  };
+  let func = safeAsyncFunction();
   evaluatorMemo[expression] = func;
   return func;
 }
-function generateEvaluatorFromString(dataStack, expression) {
-  let func = generateFunctionFromString(expression);
+function generateEvaluatorFromString(dataStack, expression, el) {
+  let func = generateFunctionFromString(expression, el);
   return (receiver = () => {
   }, {scope = {}, params = []} = {}) => {
     func.result = void 0;
     func.finished = false;
     let completeScope = mergeProxies([scope, ...dataStack]);
-    let promise = func(func, completeScope);
-    if (func.finished) {
-      runIfTypeOfFunction(receiver, func.result, completeScope, params);
-    } else {
-      promise.then((result) => {
-        runIfTypeOfFunction(receiver, result, completeScope, params);
-      });
+    if (typeof func === "function") {
+      let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+      if (func.finished) {
+        runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
+        func.result = void 0;
+      } else {
+        promise.then((result) => {
+          runIfTypeOfFunction(receiver, result, completeScope, params, el);
+        }).catch((error2) => handleError(error2, el, expression)).finally(() => func.result = void 0);
+      }
     }
   };
 }
-function runIfTypeOfFunction(receiver, value, scope, params) {
+function runIfTypeOfFunction(receiver, value, scope, params, el) {
   if (typeof value === "function") {
     let result = value.apply(scope, params);
     if (result instanceof Promise) {
-      result.then((i) => runIfTypeOfFunction(receiver, i, scope, params));
+      result.then((i) => runIfTypeOfFunction(receiver, i, scope, params)).catch((error2) => handleError(error2, el, value));
     } else {
       receiver(result);
     }
   } else {
     receiver(value);
-  }
-}
-function tryCatch(el, expression, callback, ...args) {
-  try {
-    return callback(...args);
-  } catch (e) {
-    console.warn(`Alpine Expression Error: ${e.message}
-
-Expression: "${expression}"
-
-`, el);
-    throw e;
   }
 }
 
@@ -1882,6 +1917,7 @@ var directiveOrder = [
   "ignore",
   "ref",
   "data",
+  "id",
   "bind",
   "init",
   "for",
@@ -1890,6 +1926,7 @@ var directiveOrder = [
   "show",
   "if",
   DEFAULT,
+  "teleport",
   "element"
 ];
 function byPriority(a, b) {
@@ -1958,7 +1995,7 @@ function start() {
   dispatch(document, "alpine:initializing");
   startObservingMutations();
   onElAdded((el) => initTree(el, walk));
-  onElRemoved((el) => nextTick(() => destroyTree(el)));
+  onElRemoved((el) => destroyTree(el));
   onAttributesAdded((el, attrs) => {
     directives(el, attrs).forEach((handle) => handle());
   });
@@ -1983,14 +2020,22 @@ function addInitSelector(selectorCallback) {
   initSelectorCallbacks.push(selectorCallback);
 }
 function closestRoot(el, includeInitSelectors = false) {
+  return findClosest(el, (element) => {
+    const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
+    if (selectors.some((selector) => element.matches(selector)))
+      return true;
+  });
+}
+function findClosest(el, callback) {
   if (!el)
     return;
-  const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
-  if (selectors.some((selector) => el.matches(selector)))
+  if (callback(el))
     return el;
+  if (el._x_teleportBack)
+    el = el._x_teleportBack;
   if (!el.parentElement)
     return;
-  return closestRoot(el.parentElement, includeInitSelectors);
+  return findClosest(el.parentElement, callback);
 }
 function isRoot(el) {
   return rootSelectors().some((selector) => el.matches(selector));
@@ -2222,7 +2267,11 @@ window.Element.prototype._x_toggleAndCascadeWithTransitions = function(el, value
     document.visibilityState === "visible" ? requestAnimationFrame(show) : setTimeout(show);
   };
   if (value) {
-    el._x_transition ? el._x_transition.in(show) : clickAwayCompatibleShow();
+    if (el._x_transition && (el._x_transition.enter || el._x_transition.leave)) {
+      el._x_transition.enter && (Object.entries(el._x_transition.enter.during).length || Object.entries(el._x_transition.enter.start).length || Object.entries(el._x_transition.enter.end).length) ? el._x_transition.in(show) : clickAwayCompatibleShow();
+    } else {
+      el._x_transition ? el._x_transition.in(show) : clickAwayCompatibleShow();
+    }
     return;
   }
   el._x_hidePromise = el._x_transition ? new Promise((resolve, reject) => {
@@ -2373,6 +2422,45 @@ function modifierValue(modifiers, key, fallback) {
   return rawValue;
 }
 
+// packages/alpinejs/src/clone.js
+var isCloning = false;
+function skipDuringClone(callback, fallback = () => {
+}) {
+  return (...args) => isCloning ? fallback(...args) : callback(...args);
+}
+function clone(oldEl, newEl) {
+  if (!newEl._x_dataStack)
+    newEl._x_dataStack = oldEl._x_dataStack;
+  isCloning = true;
+  dontRegisterReactiveSideEffects(() => {
+    cloneTree(newEl);
+  });
+  isCloning = false;
+}
+function cloneTree(el) {
+  let hasRunThroughFirstEl = false;
+  let shallowWalker = (el2, callback) => {
+    walk(el2, (el3, skip) => {
+      if (hasRunThroughFirstEl && isRoot(el3))
+        return skip();
+      hasRunThroughFirstEl = true;
+      callback(el3, skip);
+    });
+  };
+  initTree(el, shallowWalker);
+}
+function dontRegisterReactiveSideEffects(callback) {
+  let cache = effect;
+  overrideEffect((callback2, el) => {
+    let storedEffect = cache(callback2);
+    release(storedEffect);
+    return () => {
+    };
+  });
+  callback();
+  overrideEffect(cache);
+}
+
 // packages/alpinejs/src/utils/debounce.js
 function debounce(func, wait) {
   var timeout;
@@ -2420,46 +2508,10 @@ function store(name, value) {
   if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
     stores[name].init();
   }
+  initInterceptors(stores[name]);
 }
 function getStores() {
   return stores;
-}
-
-// packages/alpinejs/src/clone.js
-var isCloning = false;
-function skipDuringClone(callback) {
-  return (...args) => isCloning || callback(...args);
-}
-function clone(oldEl, newEl) {
-  newEl._x_dataStack = oldEl._x_dataStack;
-  isCloning = true;
-  dontRegisterReactiveSideEffects(() => {
-    cloneTree(newEl);
-  });
-  isCloning = false;
-}
-function cloneTree(el) {
-  let hasRunThroughFirstEl = false;
-  let shallowWalker = (el2, callback) => {
-    walk(el2, (el3, skip) => {
-      if (hasRunThroughFirstEl && isRoot(el3))
-        return skip();
-      hasRunThroughFirstEl = true;
-      callback(el3, skip);
-    });
-  };
-  initTree(el, shallowWalker);
-}
-function dontRegisterReactiveSideEffects(callback) {
-  let cache = effect;
-  overrideEffect((callback2, el) => {
-    let storedEffect = cache(callback2);
-    release(storedEffect);
-    return () => {
-    };
-  });
-  callback();
-  overrideEffect(cache);
 }
 
 // packages/alpinejs/src/datas.js
@@ -2495,15 +2547,20 @@ var Alpine = {
   get raw() {
     return raw;
   },
-  version: "3.4.2",
+  version: "3.7.0",
   flushAndStopDeferringMutations,
   disableEffectScheduling,
   setReactivityEngine,
+  closestDataStack,
+  skipDuringClone,
   addRootSelector,
+  addInitSelector,
+  addScopeToNode,
   deferMutations,
   mapAttributes,
   evaluateLater,
   setEvaluator,
+  mergeProxies,
   closestRoot,
   interceptor,
   transition,
@@ -2515,6 +2572,7 @@ var Alpine = {
   evaluate,
   initTree,
   nextTick,
+  prefixed: prefix,
   prefix: setPrefix,
   plugin,
   magic,
@@ -2557,6 +2615,11 @@ magic("watch", (el) => (key, callback) => {
 // packages/alpinejs/src/magics/$store.js
 magic("store", getStores);
 
+// packages/alpinejs/src/magics/$data.js
+magic("data", (el) => {
+  return mergeProxies(closestDataStack(el));
+});
+
 // packages/alpinejs/src/magics/$root.js
 magic("root", (el) => closestRoot(el));
 
@@ -2578,8 +2641,66 @@ function getArrayOfRefObject(el) {
   return refObjects;
 }
 
+// packages/alpinejs/src/ids.js
+var globalIdMemo = {};
+function findAndIncrementId(name) {
+  if (!globalIdMemo[name])
+    globalIdMemo[name] = 0;
+  return ++globalIdMemo[name];
+}
+function closestIdRoot(el, name) {
+  return findClosest(el, (element) => {
+    if (element._x_ids && element._x_ids[name])
+      return true;
+  });
+}
+function setIdRoot(el, name) {
+  if (!el._x_ids)
+    el._x_ids = {};
+  if (!el._x_ids[name])
+    el._x_ids[name] = findAndIncrementId(name);
+}
+
+// packages/alpinejs/src/magics/$id.js
+magic("id", (el) => (name, key = null) => {
+  let root = closestIdRoot(el, name);
+  let id = root ? root._x_ids[name] : findAndIncrementId(name);
+  return key ? new AlpineId(`${name}-${id}-${key}`) : new AlpineId(`${name}-${id}`);
+});
+var AlpineId = class {
+  constructor(id) {
+    this.id = id;
+  }
+  toString() {
+    return this.id;
+  }
+};
+
 // packages/alpinejs/src/magics/$el.js
 magic("el", (el) => el);
+
+// packages/alpinejs/src/directives/x-teleport.js
+directive("teleport", (el, {expression}, {cleanup}) => {
+  let target = document.querySelector(expression);
+  let clone2 = el.content.cloneNode(true).firstElementChild;
+  el._x_teleport = clone2;
+  clone2._x_teleportBack = el;
+  if (el._x_forwardEvents) {
+    el._x_forwardEvents.forEach((eventName) => {
+      clone2.addEventListener(eventName, (e) => {
+        e.stopPropagation();
+        el.dispatchEvent(new e.constructor(e.type, e));
+      });
+    });
+  }
+  addScopeToNode(clone2, {}, el);
+  mutateDom(() => {
+    target.appendChild(clone2);
+    initTree(clone2);
+    clone2._x_ignore = true;
+  });
+  cleanup(() => clone2.remove());
+});
 
 // packages/alpinejs/src/directives/x-ignore.js
 var handler = () => {
@@ -2755,6 +2876,8 @@ function on(el, event, modifiers, callback) {
         return;
       if (el.offsetWidth < 1 && el.offsetHeight < 1)
         return;
+      if (el._x_isShown === false)
+        return;
       next(e);
     });
   }
@@ -2870,6 +2993,18 @@ directive("model", (el, {modifiers, expression}, {effect: effect3, cleanup}) => 
     }});
   });
   cleanup(() => removeListener());
+  let evaluateSetModel = evaluateLater(el, `${expression} = __placeholder`);
+  el._x_model = {
+    get() {
+      let result;
+      evaluate2((value) => result = value);
+      return result;
+    },
+    set(value) {
+      evaluateSetModel(() => {
+      }, {scope: {__placeholder: value}});
+    }
+  };
   el._x_forceModelUpdate = () => {
     evaluate2((value) => {
       if (value === void 0 && expression.match(/\./))
@@ -2984,11 +3119,18 @@ function applyBindingsObject(el, expression, original, effect3) {
       cleanupRunners.pop()();
     getBindings((bindings) => {
       let attributes = Object.entries(bindings).map(([name, value]) => ({name, value}));
-      attributesOnly(attributes).forEach(({name, value}, index) => {
-        attributes[index] = {
-          name: `x-bind:${name}`,
-          value: `"${value}"`
-        };
+      attributes = attributes.filter((attr) => {
+        return !(typeof attr.value === "object" && !Array.isArray(attr.value) && attr.value !== null);
+      });
+      let staticAttributes = attributesOnly(attributes);
+      attributes = attributes.map((attribute) => {
+        if (staticAttributes.find((attr) => attr.name === attribute.name)) {
+          return {
+            name: `x-bind:${attribute.name}`,
+            value: `"${attribute.value}"`
+          };
+        }
+        return attribute;
       });
       directives(el, attributes, original).map((handle) => {
         cleanupRunners.push(handle.runCleanups);
@@ -3010,6 +3152,8 @@ directive("data", skipDuringClone((el, {expression}, {cleanup}) => {
   let dataProviderContext = {};
   injectDataProviders(dataProviderContext, magicContext);
   let data2 = evaluate(el, expression, {scope: dataProviderContext});
+  if (data2 === void 0)
+    data2 = {};
   injectMagics(data2, el);
   let reactiveData = reactive(data2);
   initInterceptors(reactiveData);
@@ -3139,7 +3283,9 @@ function loop(el, iteratorNames, evaluateItems, evaluateKey) {
       mutateDom(() => {
         elForSpot.after(marker);
         elInSpot.after(elForSpot);
+        elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
         marker.before(elInSpot);
+        elInSpot._x_currentIfEl && elInSpot.after(elInSpot._x_currentIfEl);
         marker.remove();
       });
       refreshScope(elForSpot, scopes[keys.indexOf(keyForSpot)]);
@@ -3147,6 +3293,8 @@ function loop(el, iteratorNames, evaluateItems, evaluateKey) {
     for (let i = 0; i < adds.length; i++) {
       let [lastKey2, index] = adds[i];
       let lastEl = lastKey2 === "template" ? templateEl : lookup[lastKey2];
+      if (lastEl._x_currentIfEl)
+        lastEl = lastEl._x_currentIfEl;
       let scope = scopes[index];
       let key = keys[index];
       let clone2 = document.importNode(templateEl.content, true).firstElementChild;
@@ -3256,11 +3404,23 @@ directive("if", (el, {expression}, {effect: effect3, cleanup}) => {
   cleanup(() => el._x_undoIf && el._x_undoIf());
 });
 
+// packages/alpinejs/src/directives/x-id.js
+directive("id", (el, {expression}, {evaluate: evaluate2}) => {
+  let names = evaluate2(expression);
+  names.forEach((name) => setIdRoot(el, name));
+});
+
 // packages/alpinejs/src/directives/x-on.js
 mapAttributes(startingWith("@", into(prefix("on:"))));
 directive("on", skipDuringClone((el, {value, modifiers, expression}, {cleanup}) => {
   let evaluate2 = expression ? evaluateLater(el, expression) : () => {
   };
+  if (el.tagName.toLowerCase() === "template") {
+    if (!el._x_forwardEvents)
+      el._x_forwardEvents = [];
+    if (!el._x_forwardEvents.includes(value))
+      el._x_forwardEvents.push(value);
+  }
   let removeListener = on(el, value, modifiers, (e) => {
     evaluate2(() => {
     }, {scope: {$event: e}, params: [e]});
@@ -3280,33 +3440,33 @@ var module_default = src_default;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/index.js":
-/*!*********************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/index.js ***!
-  \*********************************************************************************/
+/***/ "./node_modules/axios/index.js":
+/*!*************************************!*\
+  !*** ./node_modules/axios/index.js ***!
+  \*************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __webpack_require__(/*! ./lib/axios */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/axios.js");
+module.exports = __webpack_require__(/*! ./lib/axios */ "./node_modules/axios/lib/axios.js");
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/adapters/xhr.js":
-/*!********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/adapters/xhr.js ***!
-  \********************************************************************************************/
+/***/ "./node_modules/axios/lib/adapters/xhr.js":
+/*!************************************************!*\
+  !*** ./node_modules/axios/lib/adapters/xhr.js ***!
+  \************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var settle = __webpack_require__(/*! ./../core/settle */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/settle.js");
-var cookies = __webpack_require__(/*! ./../helpers/cookies */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/cookies.js");
-var buildURL = __webpack_require__(/*! ./../helpers/buildURL */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/buildURL.js");
-var buildFullPath = __webpack_require__(/*! ../core/buildFullPath */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/buildFullPath.js");
-var parseHeaders = __webpack_require__(/*! ./../helpers/parseHeaders */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/parseHeaders.js");
-var isURLSameOrigin = __webpack_require__(/*! ./../helpers/isURLSameOrigin */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isURLSameOrigin.js");
-var createError = __webpack_require__(/*! ../core/createError */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/createError.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
+var settle = __webpack_require__(/*! ./../core/settle */ "./node_modules/axios/lib/core/settle.js");
+var cookies = __webpack_require__(/*! ./../helpers/cookies */ "./node_modules/axios/lib/helpers/cookies.js");
+var buildURL = __webpack_require__(/*! ./../helpers/buildURL */ "./node_modules/axios/lib/helpers/buildURL.js");
+var buildFullPath = __webpack_require__(/*! ../core/buildFullPath */ "./node_modules/axios/lib/core/buildFullPath.js");
+var parseHeaders = __webpack_require__(/*! ./../helpers/parseHeaders */ "./node_modules/axios/lib/helpers/parseHeaders.js");
+var isURLSameOrigin = __webpack_require__(/*! ./../helpers/isURLSameOrigin */ "./node_modules/axios/lib/helpers/isURLSameOrigin.js");
+var createError = __webpack_require__(/*! ../core/createError */ "./node_modules/axios/lib/core/createError.js");
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -3490,20 +3650,20 @@ module.exports = function xhrAdapter(config) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/axios.js":
-/*!*************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/axios.js ***!
-  \*************************************************************************************/
+/***/ "./node_modules/axios/lib/axios.js":
+/*!*****************************************!*\
+  !*** ./node_modules/axios/lib/axios.js ***!
+  \*****************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var bind = __webpack_require__(/*! ./helpers/bind */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/bind.js");
-var Axios = __webpack_require__(/*! ./core/Axios */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/Axios.js");
-var mergeConfig = __webpack_require__(/*! ./core/mergeConfig */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/mergeConfig.js");
-var defaults = __webpack_require__(/*! ./defaults */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/defaults.js");
+var utils = __webpack_require__(/*! ./utils */ "./node_modules/axios/lib/utils.js");
+var bind = __webpack_require__(/*! ./helpers/bind */ "./node_modules/axios/lib/helpers/bind.js");
+var Axios = __webpack_require__(/*! ./core/Axios */ "./node_modules/axios/lib/core/Axios.js");
+var mergeConfig = __webpack_require__(/*! ./core/mergeConfig */ "./node_modules/axios/lib/core/mergeConfig.js");
+var defaults = __webpack_require__(/*! ./defaults */ "./node_modules/axios/lib/defaults.js");
 
 /**
  * Create an instance of Axios
@@ -3536,18 +3696,18 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(/*! ./cancel/Cancel */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/Cancel.js");
-axios.CancelToken = __webpack_require__(/*! ./cancel/CancelToken */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/CancelToken.js");
-axios.isCancel = __webpack_require__(/*! ./cancel/isCancel */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/isCancel.js");
+axios.Cancel = __webpack_require__(/*! ./cancel/Cancel */ "./node_modules/axios/lib/cancel/Cancel.js");
+axios.CancelToken = __webpack_require__(/*! ./cancel/CancelToken */ "./node_modules/axios/lib/cancel/CancelToken.js");
+axios.isCancel = __webpack_require__(/*! ./cancel/isCancel */ "./node_modules/axios/lib/cancel/isCancel.js");
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(/*! ./helpers/spread */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/spread.js");
+axios.spread = __webpack_require__(/*! ./helpers/spread */ "./node_modules/axios/lib/helpers/spread.js");
 
 // Expose isAxiosError
-axios.isAxiosError = __webpack_require__(/*! ./helpers/isAxiosError */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAxiosError.js");
+axios.isAxiosError = __webpack_require__(/*! ./helpers/isAxiosError */ "./node_modules/axios/lib/helpers/isAxiosError.js");
 
 module.exports = axios;
 
@@ -3557,10 +3717,10 @@ module.exports["default"] = axios;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/Cancel.js":
-/*!*********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/Cancel.js ***!
-  \*********************************************************************************************/
+/***/ "./node_modules/axios/lib/cancel/Cancel.js":
+/*!*************************************************!*\
+  !*** ./node_modules/axios/lib/cancel/Cancel.js ***!
+  \*************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -3587,16 +3747,16 @@ module.exports = Cancel;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/CancelToken.js":
-/*!**************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/CancelToken.js ***!
-  \**************************************************************************************************/
+/***/ "./node_modules/axios/lib/cancel/CancelToken.js":
+/*!******************************************************!*\
+  !*** ./node_modules/axios/lib/cancel/CancelToken.js ***!
+  \******************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(/*! ./Cancel */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/Cancel.js");
+var Cancel = __webpack_require__(/*! ./Cancel */ "./node_modules/axios/lib/cancel/Cancel.js");
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -3655,10 +3815,10 @@ module.exports = CancelToken;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/isCancel.js":
-/*!***********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/isCancel.js ***!
-  \***********************************************************************************************/
+/***/ "./node_modules/axios/lib/cancel/isCancel.js":
+/*!***************************************************!*\
+  !*** ./node_modules/axios/lib/cancel/isCancel.js ***!
+  \***************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -3671,21 +3831,21 @@ module.exports = function isCancel(value) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/Axios.js":
-/*!******************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/Axios.js ***!
-  \******************************************************************************************/
+/***/ "./node_modules/axios/lib/core/Axios.js":
+/*!**********************************************!*\
+  !*** ./node_modules/axios/lib/core/Axios.js ***!
+  \**********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var buildURL = __webpack_require__(/*! ../helpers/buildURL */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/buildURL.js");
-var InterceptorManager = __webpack_require__(/*! ./InterceptorManager */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/InterceptorManager.js");
-var dispatchRequest = __webpack_require__(/*! ./dispatchRequest */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/dispatchRequest.js");
-var mergeConfig = __webpack_require__(/*! ./mergeConfig */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/mergeConfig.js");
-var validator = __webpack_require__(/*! ../helpers/validator */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/validator.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
+var buildURL = __webpack_require__(/*! ../helpers/buildURL */ "./node_modules/axios/lib/helpers/buildURL.js");
+var InterceptorManager = __webpack_require__(/*! ./InterceptorManager */ "./node_modules/axios/lib/core/InterceptorManager.js");
+var dispatchRequest = __webpack_require__(/*! ./dispatchRequest */ "./node_modules/axios/lib/core/dispatchRequest.js");
+var mergeConfig = __webpack_require__(/*! ./mergeConfig */ "./node_modules/axios/lib/core/mergeConfig.js");
+var validator = __webpack_require__(/*! ../helpers/validator */ "./node_modules/axios/lib/helpers/validator.js");
 
 var validators = validator.validators;
 /**
@@ -3830,16 +3990,16 @@ module.exports = Axios;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/InterceptorManager.js":
-/*!*******************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/InterceptorManager.js ***!
-  \*******************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/InterceptorManager.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/axios/lib/core/InterceptorManager.js ***!
+  \***********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
 
 function InterceptorManager() {
   this.handlers = [];
@@ -3895,17 +4055,17 @@ module.exports = InterceptorManager;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/buildFullPath.js":
-/*!**************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/buildFullPath.js ***!
-  \**************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/buildFullPath.js":
+/*!******************************************************!*\
+  !*** ./node_modules/axios/lib/core/buildFullPath.js ***!
+  \******************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var isAbsoluteURL = __webpack_require__(/*! ../helpers/isAbsoluteURL */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAbsoluteURL.js");
-var combineURLs = __webpack_require__(/*! ../helpers/combineURLs */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/combineURLs.js");
+var isAbsoluteURL = __webpack_require__(/*! ../helpers/isAbsoluteURL */ "./node_modules/axios/lib/helpers/isAbsoluteURL.js");
+var combineURLs = __webpack_require__(/*! ../helpers/combineURLs */ "./node_modules/axios/lib/helpers/combineURLs.js");
 
 /**
  * Creates a new URL by combining the baseURL with the requestedURL,
@@ -3926,16 +4086,16 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/createError.js":
-/*!************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/createError.js ***!
-  \************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/createError.js":
+/*!****************************************************!*\
+  !*** ./node_modules/axios/lib/core/createError.js ***!
+  \****************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(/*! ./enhanceError */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/enhanceError.js");
+var enhanceError = __webpack_require__(/*! ./enhanceError */ "./node_modules/axios/lib/core/enhanceError.js");
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -3955,19 +4115,19 @@ module.exports = function createError(message, config, code, request, response) 
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/dispatchRequest.js":
-/*!****************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/dispatchRequest.js ***!
-  \****************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/dispatchRequest.js":
+/*!********************************************************!*\
+  !*** ./node_modules/axios/lib/core/dispatchRequest.js ***!
+  \********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var transformData = __webpack_require__(/*! ./transformData */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/transformData.js");
-var isCancel = __webpack_require__(/*! ../cancel/isCancel */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/cancel/isCancel.js");
-var defaults = __webpack_require__(/*! ../defaults */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/defaults.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
+var transformData = __webpack_require__(/*! ./transformData */ "./node_modules/axios/lib/core/transformData.js");
+var isCancel = __webpack_require__(/*! ../cancel/isCancel */ "./node_modules/axios/lib/cancel/isCancel.js");
+var defaults = __webpack_require__(/*! ../defaults */ "./node_modules/axios/lib/defaults.js");
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -4048,10 +4208,10 @@ module.exports = function dispatchRequest(config) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/enhanceError.js":
-/*!*************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/enhanceError.js ***!
-  \*************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/enhanceError.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/axios/lib/core/enhanceError.js ***!
+  \*****************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4101,16 +4261,16 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/mergeConfig.js":
-/*!************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/mergeConfig.js ***!
-  \************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/mergeConfig.js":
+/*!****************************************************!*\
+  !*** ./node_modules/axios/lib/core/mergeConfig.js ***!
+  \****************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ../utils */ "./node_modules/axios/lib/utils.js");
 
 /**
  * Config-specific merge-function which creates a new config-object
@@ -4199,16 +4359,16 @@ module.exports = function mergeConfig(config1, config2) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/settle.js":
-/*!*******************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/settle.js ***!
-  \*******************************************************************************************/
+/***/ "./node_modules/axios/lib/core/settle.js":
+/*!***********************************************!*\
+  !*** ./node_modules/axios/lib/core/settle.js ***!
+  \***********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var createError = __webpack_require__(/*! ./createError */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/createError.js");
+var createError = __webpack_require__(/*! ./createError */ "./node_modules/axios/lib/core/createError.js");
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -4235,17 +4395,17 @@ module.exports = function settle(resolve, reject, response) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/transformData.js":
-/*!**************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/transformData.js ***!
-  \**************************************************************************************************/
+/***/ "./node_modules/axios/lib/core/transformData.js":
+/*!******************************************************!*\
+  !*** ./node_modules/axios/lib/core/transformData.js ***!
+  \******************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var defaults = __webpack_require__(/*! ./../defaults */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/defaults.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
+var defaults = __webpack_require__(/*! ./../defaults */ "./node_modules/axios/lib/defaults.js");
 
 /**
  * Transform the data for a request or a response
@@ -4268,19 +4428,19 @@ module.exports = function transformData(data, headers, fns) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/defaults.js":
-/*!****************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/defaults.js ***!
-  \****************************************************************************************/
+/***/ "./node_modules/axios/lib/defaults.js":
+/*!********************************************!*\
+  !*** ./node_modules/axios/lib/defaults.js ***!
+  \********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
-/* provided dependency */ var process = __webpack_require__(/*! process/browser */ "../../../../../Laravel/Packages/alpine-tables/node_modules/process/browser.js");
+/* provided dependency */ var process = __webpack_require__(/*! process/browser.js */ "./node_modules/process/browser.js");
 
 
-var utils = __webpack_require__(/*! ./utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
-var normalizeHeaderName = __webpack_require__(/*! ./helpers/normalizeHeaderName */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/normalizeHeaderName.js");
-var enhanceError = __webpack_require__(/*! ./core/enhanceError */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/core/enhanceError.js");
+var utils = __webpack_require__(/*! ./utils */ "./node_modules/axios/lib/utils.js");
+var normalizeHeaderName = __webpack_require__(/*! ./helpers/normalizeHeaderName */ "./node_modules/axios/lib/helpers/normalizeHeaderName.js");
+var enhanceError = __webpack_require__(/*! ./core/enhanceError */ "./node_modules/axios/lib/core/enhanceError.js");
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -4296,10 +4456,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(/*! ./adapters/xhr */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/adapters/xhr.js");
+    adapter = __webpack_require__(/*! ./adapters/xhr */ "./node_modules/axios/lib/adapters/xhr.js");
   } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(/*! ./adapters/http */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/adapters/xhr.js");
+    adapter = __webpack_require__(/*! ./adapters/http */ "./node_modules/axios/lib/adapters/xhr.js");
   }
   return adapter;
 }
@@ -4414,10 +4574,10 @@ module.exports = defaults;
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/bind.js":
-/*!********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/bind.js ***!
-  \********************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/bind.js":
+/*!************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/bind.js ***!
+  \************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4436,16 +4596,16 @@ module.exports = function bind(fn, thisArg) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/buildURL.js":
-/*!************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/buildURL.js ***!
-  \************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/buildURL.js":
+/*!****************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/buildURL.js ***!
+  \****************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -4517,10 +4677,10 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/combineURLs.js":
-/*!***************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/combineURLs.js ***!
-  \***************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/combineURLs.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/combineURLs.js ***!
+  \*******************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4542,16 +4702,16 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/cookies.js":
-/*!***********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/cookies.js ***!
-  \***********************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/cookies.js":
+/*!***************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/cookies.js ***!
+  \***************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -4606,10 +4766,10 @@ module.exports = (
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAbsoluteURL.js":
-/*!*****************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAbsoluteURL.js ***!
-  \*****************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/isAbsoluteURL.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/isAbsoluteURL.js ***!
+  \*********************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4631,10 +4791,10 @@ module.exports = function isAbsoluteURL(url) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAxiosError.js":
-/*!****************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isAxiosError.js ***!
-  \****************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/isAxiosError.js":
+/*!********************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/isAxiosError.js ***!
+  \********************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4653,16 +4813,16 @@ module.exports = function isAxiosError(payload) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isURLSameOrigin.js":
-/*!*******************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/isURLSameOrigin.js ***!
-  \*******************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/isURLSameOrigin.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/isURLSameOrigin.js ***!
+  \***********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -4732,16 +4892,16 @@ module.exports = (
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/normalizeHeaderName.js":
-/*!***********************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/normalizeHeaderName.js ***!
-  \***********************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/normalizeHeaderName.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/normalizeHeaderName.js ***!
+  \***************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ../utils */ "./node_modules/axios/lib/utils.js");
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -4755,16 +4915,16 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/parseHeaders.js":
-/*!****************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/parseHeaders.js ***!
-  \****************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/parseHeaders.js":
+/*!********************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/parseHeaders.js ***!
+  \********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js");
+var utils = __webpack_require__(/*! ./../utils */ "./node_modules/axios/lib/utils.js");
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -4819,10 +4979,10 @@ module.exports = function parseHeaders(headers) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/spread.js":
-/*!**********************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/spread.js ***!
-  \**********************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/spread.js":
+/*!**************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/spread.js ***!
+  \**************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4857,16 +5017,16 @@ module.exports = function spread(callback) {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/validator.js":
-/*!*************************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/validator.js ***!
-  \*************************************************************************************************/
+/***/ "./node_modules/axios/lib/helpers/validator.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/axios/lib/helpers/validator.js ***!
+  \*****************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var pkg = __webpack_require__(/*! ./../../package.json */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/package.json");
+var pkg = __webpack_require__(/*! ./../../package.json */ "./node_modules/axios/package.json");
 
 var validators = {};
 
@@ -4973,16 +5133,16 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js":
-/*!*************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/utils.js ***!
-  \*************************************************************************************/
+/***/ "./node_modules/axios/lib/utils.js":
+/*!*****************************************!*\
+  !*** ./node_modules/axios/lib/utils.js ***!
+  \*****************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-var bind = __webpack_require__(/*! ./helpers/bind */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/lib/helpers/bind.js");
+var bind = __webpack_require__(/*! ./helpers/bind */ "./node_modules/axios/lib/helpers/bind.js");
 
 // utils is a library of generic helper functions non-specific to axios
 
@@ -5333,10 +5493,10 @@ module.exports = {
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/resources/js/alpinetable.js":
-/*!*********************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/resources/js/alpinetable.js ***!
-  \*********************************************************************************/
+/***/ "./resources/js/alpinetable.js":
+/*!*************************************!*\
+  !*** ./resources/js/alpinetable.js ***!
+  \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -5344,7 +5504,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 /* harmony default export */ function __WEBPACK_DEFAULT_EXPORT__() {
   var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -5357,24 +5517,26 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       sort_asc: true,
       search: '',
       filters: {}
-    }).as(data.key + '_filters'),
-    loading: false,
+    }).as((data.key || 'alpine') + '_filters'),
     route: data.route,
-    columns: data.columns,
+    columns: [],
+    //data.columns,
+    items: null,
     results: 0,
+    total_results: 0,
     max_pages: 0,
     from: 1,
     to: 1,
-    editfilter: null,
-    items: [],
-    //Bindings
-    alpinetable: _defineProperty({}, 'x-on:click', function xOnClick() {//this.loading = !this.loading;
-    }),
+    loading: false,
+    show_search: false,
+    show_filters: false,
+    // Bindings
+    // None so far...
     // Functions
     init: function init() {
       var _this = this;
 
-      this.loadItems();
+      this.loadItems(true);
       this.$watch('filters.page', function () {
         return _this.loadItems();
       }); //this.$watch('filters.per_page, filters.sort_by, filters.sort_asc, filters.search, filters.filters', () => this.resetPage());
@@ -5394,6 +5556,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.$watch('filters.filters', function () {
         return _this.resetPage();
       });
+
+      if (this.filters.search.length) {
+        this.show_search = true;
+      }
+    },
+    pageUp: function pageUp() {
+      this.filters.page = Math.min(this.max_pages, Number(this.filters.page) + 1);
+    },
+    pageDown: function pageDown() {
+      this.filters.page = Math.max(1, Number(this.filters.page) - 1);
     },
     resetPage: function resetPage() {
       if (this.filters.page === 1) {
@@ -5402,32 +5574,84 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         this.filters.page = 1;
       }
     },
-    loadItems: function loadItems() {
+    getColumns: function getColumns() {
       var _this2 = this;
 
-      this.loading = true;
       axios.post(this.route, {
-        alpine: this.filters
+        get: 'columns'
       }).then(function (response) {
-        _this2.results = response.data.count;
-        _this2.from = (_this2.filters.page - 1) * _this2.filters.per_page + 1;
-        _this2.to = Math.min(_this2.results, _this2.filters.page * _this2.filters.per_page);
-        _this2.max_pages = Math.ceil(_this2.results / _this2.filters.per_page); //this.items = [];
+        _this2.columns = response.data;
+
+        _this2.loadItems();
+      })["catch"](function (response) {})["finally"](function () {});
+    },
+    loadItems: function loadItems(initial_load) {
+      var _this3 = this;
+
+      this.loading = true;
+      var data = {
+        alpine: this.filters
+      };
+
+      if (initial_load) {
+        data.get = 'columns';
+      }
+
+      axios.post(this.route, data).then(function (response) {
+        if (response.data.columns) {
+          _this3.columns = response.data.columns;
+        }
+
+        _this3.results = response.data.count;
+        _this3.total_results = response.data.total_count;
+        _this3.from = (_this3.filters.page - 1) * _this3.filters.per_page + 1;
+        _this3.to = Math.min(_this3.results, _this3.filters.page * _this3.filters.per_page);
+        _this3.max_pages = Math.ceil(_this3.results / _this3.filters.per_page); //this.items = [];
         //this.$nextTick(() => this.items = response.data.items);
 
-        _this2.items = response.data.items;
+        _this3.items = response.data.items;
       })["catch"](function (response) {})["finally"](function () {
-        _this2.loading = false;
+        _this3.loading = false;
       });
     },
     pageString: function pageString() {
-      if (this.max_pages === 1) {
-        return 'Showing ' + this.results + ' results';
-      } else {
-        return 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + ' results';
+      if (this.items === null) {
+        return '';
+      } else if (!this.results) {
+        return 'No results found';
       }
+
+      var str = '';
+
+      if (this.max_pages === 1) {
+        str = 'Showing ' + this.results + ' results';
+      } else {
+        str = 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + ' results';
+      }
+
+      if (this.results !== this.total_results) {
+        str += ' (' + this.total_results + ' total)';
+      }
+
+      return str;
     },
     format: function format(value, _format) {
+      var _this4 = this;
+
+      if (Array.isArray(value)) {
+        return value.map(function (item) {
+          return _this4.format(item, _format);
+        }).join(', ');
+      } else if ('object' === _typeof(value)) {
+        var output = value.value || value[0] || null;
+
+        if (value.link) {
+          output = '<a href="' + value.link + '" class="hover:underline">' + output + '</a>';
+        }
+
+        return output;
+      }
+
       switch (_format) {
         case 'currency':
           value = new Intl.NumberFormat('en-AU', {
@@ -5456,27 +5680,43 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       }
 
       this.resetPage();
+    },
+    toggleSearch: function toggleSearch() {
+      var _this5 = this;
+
+      this.show_search = !this.show_search;
+
+      if (this.show_search) {
+        this.$nextTick(function () {
+          _this5.$refs.search.focus();
+        });
+      } else {
+        this.filters.search = '';
+      }
     }
   };
 }
 ;
+/* SAFELIST
+w-0
+ */
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/resources/js/bootstrap.js":
-/*!*******************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/resources/js/bootstrap.js ***!
-  \*******************************************************************************/
+/***/ "./resources/js/bootstrap.js":
+/*!***********************************!*\
+  !*** ./resources/js/bootstrap.js ***!
+  \***********************************/
 /***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
 
-window._ = __webpack_require__(/*! lodash */ "../../../../../Laravel/Packages/alpine-tables/node_modules/lodash/lodash.js");
+window._ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
  * to our Laravel back-end. This library automatically handles sending the
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
 
-window.axios = __webpack_require__(/*! axios */ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/index.js");
+window.axios = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
@@ -5494,10 +5734,10 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/lodash/lodash.js":
-/*!***********************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/lodash/lodash.js ***!
-  \***********************************************************************************/
+/***/ "./node_modules/lodash/lodash.js":
+/*!***************************************!*\
+  !*** ./node_modules/lodash/lodash.js ***!
+  \***************************************/
 /***/ (function(module, exports, __webpack_require__) {
 
 /* module decorator */ module = __webpack_require__.nmd(module);
@@ -22706,10 +22946,10 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/process/browser.js":
-/*!*************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/process/browser.js ***!
-  \*************************************************************************************/
+/***/ "./node_modules/process/browser.js":
+/*!*****************************************!*\
+  !*** ./node_modules/process/browser.js ***!
+  \*****************************************/
 /***/ ((module) => {
 
 // shim for using process in browser
@@ -22900,14 +23140,14 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ "../../../../../Laravel/Packages/alpine-tables/node_modules/axios/package.json":
-/*!*************************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/node_modules/axios/package.json ***!
-  \*************************************************************************************/
+/***/ "./node_modules/axios/package.json":
+/*!*****************************************!*\
+  !*** ./node_modules/axios/package.json ***!
+  \*****************************************/
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"_from":"axios@^0.21","_id":"axios@0.21.4","_inBundle":false,"_integrity":"sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==","_location":"/axios","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"axios@^0.21","name":"axios","escapedName":"axios","rawSpec":"^0.21","saveSpec":null,"fetchSpec":"^0.21"},"_requiredBy":["#DEV:/"],"_resolved":"https://registry.npmjs.org/axios/-/axios-0.21.4.tgz","_shasum":"c67b90dc0568e5c1cf2b0b858c43ba28e2eda575","_spec":"axios@^0.21","_where":"D:\\\\Webserver\\\\www\\\\Laravel\\\\Packages\\\\alpine-tables","author":{"name":"Matt Zabriskie"},"browser":{"./lib/adapters/http.js":"./lib/adapters/xhr.js"},"bugs":{"url":"https://github.com/axios/axios/issues"},"bundleDependencies":false,"bundlesize":[{"path":"./dist/axios.min.js","threshold":"5kB"}],"dependencies":{"follow-redirects":"^1.14.0"},"deprecated":false,"description":"Promise based HTTP client for the browser and node.js","devDependencies":{"coveralls":"^3.0.0","es6-promise":"^4.2.4","grunt":"^1.3.0","grunt-banner":"^0.6.0","grunt-cli":"^1.2.0","grunt-contrib-clean":"^1.1.0","grunt-contrib-watch":"^1.0.0","grunt-eslint":"^23.0.0","grunt-karma":"^4.0.0","grunt-mocha-test":"^0.13.3","grunt-ts":"^6.0.0-beta.19","grunt-webpack":"^4.0.2","istanbul-instrumenter-loader":"^1.0.0","jasmine-core":"^2.4.1","karma":"^6.3.2","karma-chrome-launcher":"^3.1.0","karma-firefox-launcher":"^2.1.0","karma-jasmine":"^1.1.1","karma-jasmine-ajax":"^0.1.13","karma-safari-launcher":"^1.0.0","karma-sauce-launcher":"^4.3.6","karma-sinon":"^1.0.5","karma-sourcemap-loader":"^0.3.8","karma-webpack":"^4.0.2","load-grunt-tasks":"^3.5.2","minimist":"^1.2.0","mocha":"^8.2.1","sinon":"^4.5.0","terser-webpack-plugin":"^4.2.3","typescript":"^4.0.5","url-search-params":"^0.10.0","webpack":"^4.44.2","webpack-dev-server":"^3.11.0"},"homepage":"https://axios-http.com","jsdelivr":"dist/axios.min.js","keywords":["xhr","http","ajax","promise","node"],"license":"MIT","main":"index.js","name":"axios","repository":{"type":"git","url":"git+https://github.com/axios/axios.git"},"scripts":{"build":"NODE_ENV=production grunt build","coveralls":"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js","examples":"node ./examples/server.js","fix":"eslint --fix lib/**/*.js","postversion":"git push && git push --tags","preversion":"npm test","start":"node ./sandbox/server.js","test":"grunt test","version":"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"},"typings":"./index.d.ts","unpkg":"dist/axios.min.js","version":"0.21.4"}');
+module.exports = JSON.parse('{"_from":"axios@^0.21","_id":"axios@0.21.4","_inBundle":false,"_integrity":"sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==","_location":"/axios","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"axios@^0.21","name":"axios","escapedName":"axios","rawSpec":"^0.21","saveSpec":null,"fetchSpec":"^0.21"},"_requiredBy":["#DEV:/"],"_resolved":"https://registry.npmjs.org/axios/-/axios-0.21.4.tgz","_shasum":"c67b90dc0568e5c1cf2b0b858c43ba28e2eda575","_spec":"axios@^0.21","_where":"D:\\\\LocalServer\\\\Packages\\\\alpine-tables","author":{"name":"Matt Zabriskie"},"browser":{"./lib/adapters/http.js":"./lib/adapters/xhr.js"},"bugs":{"url":"https://github.com/axios/axios/issues"},"bundleDependencies":false,"bundlesize":[{"path":"./dist/axios.min.js","threshold":"5kB"}],"dependencies":{"follow-redirects":"^1.14.0"},"deprecated":false,"description":"Promise based HTTP client for the browser and node.js","devDependencies":{"coveralls":"^3.0.0","es6-promise":"^4.2.4","grunt":"^1.3.0","grunt-banner":"^0.6.0","grunt-cli":"^1.2.0","grunt-contrib-clean":"^1.1.0","grunt-contrib-watch":"^1.0.0","grunt-eslint":"^23.0.0","grunt-karma":"^4.0.0","grunt-mocha-test":"^0.13.3","grunt-ts":"^6.0.0-beta.19","grunt-webpack":"^4.0.2","istanbul-instrumenter-loader":"^1.0.0","jasmine-core":"^2.4.1","karma":"^6.3.2","karma-chrome-launcher":"^3.1.0","karma-firefox-launcher":"^2.1.0","karma-jasmine":"^1.1.1","karma-jasmine-ajax":"^0.1.13","karma-safari-launcher":"^1.0.0","karma-sauce-launcher":"^4.3.6","karma-sinon":"^1.0.5","karma-sourcemap-loader":"^0.3.8","karma-webpack":"^4.0.2","load-grunt-tasks":"^3.5.2","minimist":"^1.2.0","mocha":"^8.2.1","sinon":"^4.5.0","terser-webpack-plugin":"^4.2.3","typescript":"^4.0.5","url-search-params":"^0.10.0","webpack":"^4.44.2","webpack-dev-server":"^3.11.0"},"homepage":"https://axios-http.com","jsdelivr":"dist/axios.min.js","keywords":["xhr","http","ajax","promise","node"],"license":"MIT","main":"index.js","name":"axios","repository":{"type":"git","url":"git+https://github.com/axios/axios.git"},"scripts":{"build":"NODE_ENV=production grunt build","coveralls":"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js","examples":"node ./examples/server.js","fix":"eslint --fix lib/**/*.js","postversion":"git push && git push --tags","preversion":"npm test","start":"node ./sandbox/server.js","test":"grunt test","version":"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"},"typings":"./index.d.ts","unpkg":"dist/axios.min.js","version":"0.21.4"}');
 
 /***/ })
 
@@ -22995,14 +23235,14 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-/*!*************************************************************************!*\
-  !*** ../../../../../Laravel/Packages/alpine-tables/resources/js/app.js ***!
-  \*************************************************************************/
+/*!*****************************!*\
+  !*** ./resources/js/app.js ***!
+  \*****************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! alpinejs */ "../../../../../Laravel/Packages/alpine-tables/node_modules/alpinejs/dist/module.esm.js");
-/* harmony import */ var _alpinejs_persist__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @alpinejs/persist */ "../../../../../Laravel/Packages/alpine-tables/node_modules/@alpinejs/persist/dist/module.esm.js");
-/* harmony import */ var _alpinetable_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./alpinetable.js */ "../../../../../Laravel/Packages/alpine-tables/resources/js/alpinetable.js");
-__webpack_require__(/*! ./bootstrap */ "../../../../../Laravel/Packages/alpine-tables/resources/js/bootstrap.js");
+/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/module.esm.js");
+/* harmony import */ var _alpinejs_persist__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @alpinejs/persist */ "./node_modules/@alpinejs/persist/dist/module.esm.js");
+/* harmony import */ var _alpinetable_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./alpinetable.js */ "./resources/js/alpinetable.js");
+__webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 
 

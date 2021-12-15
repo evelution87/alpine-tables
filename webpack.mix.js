@@ -12,6 +12,7 @@ const mix = require('laravel-mix');
  */
 
 mix.disableSuccessNotifications()
+    .js('resources/js/cdn.js', 'assets/js/alpinetables.js')
     .js('resources/js/app.js', 'assets/js');
     /*.postCss('resources/css/app.css', 'assets/css', [
         require('postcss-import'),
