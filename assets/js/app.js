@@ -5677,8 +5677,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
   var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   return {
     // Data
-    page: this.$persist(1).as((data.key || 'alpinetable') + '_page'),
     filters: this.$persist({
+      page: 1,
       per_page: 3,
       sort_by: null,
       sort_asc: true,
@@ -5703,10 +5703,22 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var _this = this;
 
       this.loadItems(true);
-      this.$watch('page', function () {
+      this.$watch('filters.page', function () {
         return _this.loadItems();
       });
-      this.$watch('filters', function () {
+      this.$watch('filters.per_page', function () {
+        return _this.resetPage();
+      });
+      this.$watch('filters.sort_by', function () {
+        return _this.resetPage();
+      });
+      this.$watch('filters.sort_asc', function () {
+        return _this.resetPage();
+      });
+      this.$watch('filters.search', function () {
+        return _this.resetPage();
+      });
+      this.$watch('filters.filters', function () {
         return _this.resetPage();
       });
 
@@ -5715,18 +5727,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       }
     },
     pageUp: function pageUp() {
-      this.page = Math.min(this.max_pages, Number(this.page) + 1);
+      this.filters.page = Math.min(this.max_pages, Number(this.filters.page) + 1);
     },
     pageDown: function pageDown() {
-      this.page = Math.max(1, Number(this.page) - 1);
+      this.filters.page = Math.max(1, Number(this.filters.page) - 1);
     },
     resetPage: function resetPage() {
       console.log('resetPage');
 
-      if (this.page === 1) {
+      if (this.filters.page === 1) {
         this.loadItems();
       } else {
-        this.page = 1;
+        this.filters.page = 1;
       }
     },
     getColumns: function getColumns() {
@@ -5748,7 +5760,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var data = {
         alpine: this.filters
       };
-      data.alpine.page = this.page;
 
       if (initial_load) {
         data.get = 'columns';
@@ -5761,8 +5772,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 
         _this3.results = response.data.count;
         _this3.total_results = response.data.total_count;
-        _this3.from = (_this3.page - 1) * _this3.filters.per_page + 1;
-        _this3.to = Math.min(_this3.results, _this3.page * _this3.filters.per_page);
+        _this3.from = (_this3.filters.page - 1) * _this3.filters.per_page + 1;
+        _this3.to = Math.min(_this3.results, _this3.filters.page * _this3.filters.per_page);
         _this3.max_pages = Math.ceil(_this3.results / _this3.filters.per_page);
         _this3.items = response.data.items;
       })["catch"](function (response) {})["finally"](function () {

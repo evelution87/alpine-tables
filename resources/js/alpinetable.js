@@ -2,8 +2,8 @@ export default function ( data = {} ) {
 	return {
 		
 		// Data
-		page: this.$persist( 1 ).as( (data.key || 'alpinetable') + '_page' ),
 		filters: this.$persist( {
+			page: 1,
 			per_page: 3,
 			sort_by: null,
 			sort_asc: true,
@@ -33,8 +33,13 @@ export default function ( data = {} ) {
 			
 			this.loadItems( true );
 			
-			this.$watch( 'page', () => this.loadItems() );
-			this.$watch( 'filters', () => this.resetPage() );
+			this.$watch( 'filters.page', () => this.loadItems() );
+			
+			this.$watch( 'filters.per_page', () => this.resetPage() );
+			this.$watch( 'filters.sort_by', () => this.resetPage() );
+			this.$watch( 'filters.sort_asc', () => this.resetPage() );
+			this.$watch( 'filters.search', () => this.resetPage() );
+			this.$watch( 'filters.filters', () => this.resetPage() );
 			
 			if ( this.filters.search.length ) {
 				this.show_search = true;
@@ -42,17 +47,17 @@ export default function ( data = {} ) {
 			
 		},
 		pageUp() {
-			this.page = Math.min( this.max_pages, Number( this.page ) + 1 );
+			this.filters.page = Math.min( this.max_pages, Number( this.filters.page ) + 1 );
 		},
 		pageDown() {
-			this.page = Math.max( 1, Number( this.page ) - 1 );
+			this.filters.page = Math.max( 1, Number( this.filters.page ) - 1 );
 		},
 		resetPage() {
 			console.log('resetPage');
-			if ( this.page === 1 ) {
+			if ( this.filters.page === 1 ) {
 				this.loadItems();
 			} else {
-				this.page = 1;
+				this.filters.page = 1;
 			}
 		},
 		getColumns() {
@@ -72,7 +77,6 @@ export default function ( data = {} ) {
 			console.log('loadItems');
 			this.loading = true;
 			let data = { alpine: this.filters };
-			data.alpine.page = this.page;
 			if ( initial_load ) {
 				data.get = 'columns';
 			}
@@ -84,8 +88,8 @@ export default function ( data = {} ) {
 					
 					this.results = response.data.count;
 					this.total_results = response.data.total_count;
-					this.from = (this.page - 1) * this.filters.per_page + 1;
-					this.to = Math.min( this.results, (this.page * this.filters.per_page) );
+					this.from = (this.filters.page - 1) * this.filters.per_page + 1;
+					this.to = Math.min( this.results, (this.filters.page * this.filters.per_page) );
 					this.max_pages = Math.ceil( this.results / this.filters.per_page );
 					
 					this.items = response.data.items;
