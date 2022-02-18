@@ -48,6 +48,7 @@ export default function ( data = {} ) {
 			this.page = Math.max( 1, Number( this.page ) - 1 );
 		},
 		resetPage() {
+			console.log('resetPage');
 			if ( this.page === 1 ) {
 				this.loadItems();
 			} else {
@@ -68,6 +69,7 @@ export default function ( data = {} ) {
 				} );
 		},
 		loadItems( initial_load ) {
+			console.log('loadItems');
 			this.loading = true;
 			let data = { alpine: this.filters };
 			data.alpine.page = this.page;
