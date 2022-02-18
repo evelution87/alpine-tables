@@ -12,9 +12,9 @@ const mix = require('laravel-mix');
  */
 
 mix.disableSuccessNotifications()
-    .js('resources/js/cdn.js', 'assets/js/alpinetables.js')
+    .js('resources/js/script.js', 'assets/js/script.js')
     .js('resources/js/app.js', 'assets/js')
-    .postCss('resources/css/app.css', 'assets/css', [
+    .postCss('resources/css/app.css', 'assets/css/alpinetables.css', [
         require('postcss-import'),
         require('tailwindcss'),
         require('autoprefixer'),

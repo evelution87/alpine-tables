@@ -23,7 +23,7 @@ trait HasAlpineTable {
 		return collect( $this->alpineColumns() )->pluckMany( [ 'key', 'label', 'filter', 'class', 'format' ] );
 	}
 	
-	public function alpine( Request $request ) {
+	public function alpineRequest( Request $request ) {
 		
 		$alpine = (object)( $request->alpine ?? [] );
 		
