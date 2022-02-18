@@ -14,7 +14,12 @@ trait HasAlpineTable {
 	abstract public function alpineColumns();
 	
 	public function alpineSearchColumns() {
-		return [];
+		$cols   = collect( $this->alpineColumns() )->pluck( 'key' )->toArray();
+		$return = [];
+		foreach ( $cols as $col ) {
+			$return[ $col ] = true;
+		}
+		return $return;
 	}
 	
 	public function alpineScope( $query ) {
