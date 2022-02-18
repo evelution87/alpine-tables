@@ -129,8 +129,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.filters.page = Math.max(1, Number(this.filters.page) - 1);
     },
     resetPage: function resetPage() {
-      console.log('resetPage');
-
       if (this.filters.page === 1) {
         this.loadItems();
       } else {
@@ -151,7 +149,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
     loadItems: function loadItems(initial_load) {
       var _this3 = this;
 
-      console.log('loadItems');
       this.loading = true;
       var data = {
         alpine: this.filters
