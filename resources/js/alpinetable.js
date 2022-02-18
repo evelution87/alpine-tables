@@ -53,7 +53,6 @@ export default function ( data = {} ) {
 			this.filters.page = Math.max( 1, Number( this.filters.page ) - 1 );
 		},
 		resetPage() {
-			console.log('resetPage');
 			if ( this.filters.page === 1 ) {
 				this.loadItems();
 			} else {
@@ -74,7 +73,6 @@ export default function ( data = {} ) {
 				} );
 		},
 		loadItems( initial_load ) {
-			console.log('loadItems');
 			this.loading = true;
 			let data = { alpine: this.filters };
 			if ( initial_load ) {
