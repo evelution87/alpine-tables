@@ -19,7 +19,7 @@ class AlpineTablesServiceProvider extends ServiceProvider {
 			
 			$this->publishes( [
 				__DIR__ . '/../assets' => public_path( 'vendor/alpine-tables' ),
-			], 'assets' );
+			], 'laravel-assets' );
 			
 			$this->commands( [
 				Publish::class,
