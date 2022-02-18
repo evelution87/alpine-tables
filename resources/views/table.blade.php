@@ -5,7 +5,6 @@
 <div x-data="alpinetable(data)">
 
     <div class="flex justify-end items-center space-x-4 mb-3 text-gray-700">
-        {{--<div class="opacity-0 transition" :class="{'opacity-100':show_search || filters.search.length}">--}}
         <div x-show="show_search || filters.search.length" x-transition.opacity>
             <label for="search">Search: </label>
             <input type="text" x-model.debounce="filters.search" x-ref="search" id="search" class="bg-transparent outline-none border-0 border-b-2 border-gray-200 focus:ring-0 p-0" />
@@ -28,7 +27,7 @@
                 <div class="whitespace-nowrap">
                     Results per Page:
                     <select x-model="filters.per_page">
-                        <template x-for="per_page in [1,2,3,10,25,50,100]">
+                        <template x-for="per_page in [10,25,50,100]">
                             <option x-text="per_page" :selected="filters.per_page === per_page.toString()"></option>
                         </template>
                     </select>
