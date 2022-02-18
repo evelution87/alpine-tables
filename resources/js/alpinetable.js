@@ -2,17 +2,17 @@ export default function ( data = {} ) {
 	return {
 		
 		// Data
+		page: this.$persist( 1 ).as( (data.key || 'alpinetable') + '_page' ),
 		filters: this.$persist( {
-			page: 1,
 			per_page: 3,
 			sort_by: null,
 			sort_asc: true,
 			search: '',
 			filters: {}
-		} ).as( (data.key || 'alpine') + '_filters' ),
+		} ).as( (data.key || 'alpinetable') + '_filters' ),
 		
 		route: data.route,
-		columns: [],//data.columns,
+		columns: [],
 		items: [],
 		
 		results: 0,
@@ -33,13 +33,8 @@ export default function ( data = {} ) {
 			
 			this.loadItems( true );
 			
-			this.$watch( 'filters.page', () => this.loadItems() );
-			//this.$watch('filters.per_page, filters.sort_by, filters.sort_asc, filters.search, filters.filters', () => this.resetPage());
-			this.$watch( 'filters.per_page', () => this.resetPage() );
-			this.$watch( 'filters.sort_by', () => this.resetPage() );
-			this.$watch( 'filters.sort_asc', () => this.resetPage() );
-			this.$watch( 'filters.search', () => this.resetPage() );
-			this.$watch( 'filters.filters', () => this.resetPage() );
+			this.$watch( 'page', () => this.loadItems() );
+			this.$watch( 'filters', () => this.resetPage() );
 			
 			if ( this.filters.search.length ) {
 				this.show_search = true;
@@ -47,16 +42,16 @@ export default function ( data = {} ) {
 			
 		},
 		pageUp() {
-			this.filters.page = Math.min( this.max_pages, Number( this.filters.page ) + 1 );
+			this.page = Math.min( this.max_pages, Number( this.page ) + 1 );
 		},
 		pageDown() {
-			this.filters.page = Math.max( 1, Number( this.filters.page ) - 1 );
+			this.page = Math.max( 1, Number( this.page ) - 1 );
 		},
 		resetPage() {
-			if ( this.filters.page === 1 ) {
+			if ( this.page === 1 ) {
 				this.loadItems();
 			} else {
-				this.filters.page = 1;
+				this.page = 1;
 			}
 		},
 		getColumns() {
@@ -86,12 +81,10 @@ export default function ( data = {} ) {
 					
 					this.results = response.data.count;
 					this.total_results = response.data.total_count;
-					this.from = (this.filters.page - 1) * this.filters.per_page + 1;
-					this.to = Math.min( this.results, (this.filters.page * this.filters.per_page) );
+					this.from = (this.page - 1) * this.filters.per_page + 1;
+					this.to = Math.min( this.results, (this.page * this.filters.per_page) );
 					this.max_pages = Math.ceil( this.results / this.filters.per_page );
 					
-					//this.items = [];
-					//this.$nextTick(() => this.items = response.data.items);
 					this.items = response.data.items;
 					
 				} )
@@ -131,16 +124,24 @@ export default function ( data = {} ) {
 				return output;
 			}
 			
-			switch ( format ) {
-				case 'date':
-					value = value.split( 'T' )[0];
-					break;
-				case 'currency':
-					value = (new Intl.NumberFormat( 'en-AU', {
-						style: 'currency',
-						currency: 'AUD'
-					} )).format( value );
-					break;
+			if (format instanceof Function) {
+				
+				value = format(value);
+				
+			} else {
+				
+				switch ( format ) {
+					case 'date':
+						value = value.split( 'T' )[0];
+						break;
+					case 'currency':
+						value = (new Intl.NumberFormat( 'en-AU', {
+							style: 'currency',
+							currency: 'AUD'
+						} )).format( value );
+						break;
+				}
+				
 			}
 			
 			return value;
@@ -174,7 +175,3 @@ export default function ( data = {} ) {
 		}
 	};
 };
-
-/* SAFELIST
-w-0
- */

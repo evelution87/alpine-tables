@@ -13,7 +13,9 @@ trait HasAlpineTable {
 	
 	abstract public function alpineColumns();
 	
-	abstract public function alpineSearchColumns();
+	public function alpineSearchColumns() {
+		return [];
+	}
 	
 	public function alpineScope( $query ) {
 		return $query;
@@ -38,12 +40,12 @@ trait HasAlpineTable {
 		$skip = ( max( 0, $page - 1 ) * $per_page );
 		
 		$model_classname = $this->alpineModel();
-		$model         = new $model_classname;
-		$model_columns = $model->getConnection()->getSchemaBuilder()->getColumnListing( $model->getTable() );
-		$columns       = collect( $this->alpineColumns() );
-		$post_query    = false;
-		$post_sort     = false;
-		$query_search  = true;
+		$model           = new $model_classname;
+		$model_columns   = $model->getConnection()->getSchemaBuilder()->getColumnListing( $model->getTable() );
+		$columns         = collect( $this->alpineColumns() );
+		$post_query      = false;
+		$post_sort       = false;
+		$query_search    = true;
 		
 		// Prepare Search
 		$search_columns = [];

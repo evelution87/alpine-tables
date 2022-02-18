@@ -73,17 +73,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
   var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   return {
     // Data
+    page: this.$persist(1).as((data.key || 'alpinetable') + '_page'),
     filters: this.$persist({
-      page: 1,
       per_page: 3,
       sort_by: null,
       sort_asc: true,
       search: '',
       filters: {}
-    }).as((data.key || 'alpine') + '_filters'),
+    }).as((data.key || 'alpinetable') + '_filters'),
     route: data.route,
     columns: [],
-    //data.columns,
     items: [],
     results: 0,
     total_results: 0,
@@ -100,23 +99,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var _this = this;
 
       this.loadItems(true);
-      this.$watch('filters.page', function () {
+      this.$watch('page', function () {
         return _this.loadItems();
-      }); //this.$watch('filters.per_page, filters.sort_by, filters.sort_asc, filters.search, filters.filters', () => this.resetPage());
-
-      this.$watch('filters.per_page', function () {
-        return _this.resetPage();
       });
-      this.$watch('filters.sort_by', function () {
-        return _this.resetPage();
-      });
-      this.$watch('filters.sort_asc', function () {
-        return _this.resetPage();
-      });
-      this.$watch('filters.search', function () {
-        return _this.resetPage();
-      });
-      this.$watch('filters.filters', function () {
+      this.$watch('filters', function () {
         return _this.resetPage();
       });
 
@@ -125,16 +111,16 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       }
     },
     pageUp: function pageUp() {
-      this.filters.page = Math.min(this.max_pages, Number(this.filters.page) + 1);
+      this.page = Math.min(this.max_pages, Number(this.page) + 1);
     },
     pageDown: function pageDown() {
-      this.filters.page = Math.max(1, Number(this.filters.page) - 1);
+      this.page = Math.max(1, Number(this.page) - 1);
     },
     resetPage: function resetPage() {
-      if (this.filters.page === 1) {
+      if (this.page === 1) {
         this.loadItems();
       } else {
-        this.filters.page = 1;
+        this.page = 1;
       }
     },
     getColumns: function getColumns() {
@@ -167,11 +153,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 
         _this3.results = response.data.count;
         _this3.total_results = response.data.total_count;
-        _this3.from = (_this3.filters.page - 1) * _this3.filters.per_page + 1;
-        _this3.to = Math.min(_this3.results, _this3.filters.page * _this3.filters.per_page);
-        _this3.max_pages = Math.ceil(_this3.results / _this3.filters.per_page); //this.items = [];
-        //this.$nextTick(() => this.items = response.data.items);
-
+        _this3.from = (_this3.page - 1) * _this3.filters.per_page + 1;
+        _this3.to = Math.min(_this3.results, _this3.page * _this3.filters.per_page);
+        _this3.max_pages = Math.ceil(_this3.results / _this3.filters.per_page);
         _this3.items = response.data.items;
       })["catch"](function (response) {})["finally"](function () {
         _this3.loading = false;
@@ -215,17 +199,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         return output;
       }
 
-      switch (_format) {
-        case 'date':
-          value = value.split('T')[0];
-          break;
+      if (_format instanceof Function) {
+        value = _format(value);
+      } else {
+        switch (_format) {
+          case 'date':
+            value = value.split('T')[0];
+            break;
 
-        case 'currency':
-          value = new Intl.NumberFormat('en-AU', {
-            style: 'currency',
-            currency: 'AUD'
-          }).format(value);
-          break;
+          case 'currency':
+            value = new Intl.NumberFormat('en-AU', {
+              style: 'currency',
+              currency: 'AUD'
+            }).format(value);
+            break;
+        }
       }
 
       return value;
@@ -264,9 +252,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
   };
 }
 ;
-/* SAFELIST
-w-0
- */
 
 /***/ }),
 
