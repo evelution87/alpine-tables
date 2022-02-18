@@ -1,6 +1,6 @@
 <?php
 
-namespace Evelution87\AlpineTables;
+namespace Evelution\AlpineTables;
 
 class AlpineTables
 {

@@ -1,12 +1,9 @@
 <?php
 
-namespace Evelution87\AlpineTables;
+namespace Evelution\AlpineTables;
 
 use Illuminate\Support\Facades\Facade;
 
-/**
- * @see \Evelution87\AlpineTables\Skeleton\SkeletonClass
- */
 class AlpineTablesFacade extends Facade
 {
     /**

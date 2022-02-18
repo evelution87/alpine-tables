@@ -1,6 +1,6 @@
 <?php
 
-namespace Evelution87\AlpineTables\View;
+namespace Evelution\AlpineTables\View;
 
 use Illuminate\View\Component;
 

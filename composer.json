@@ -18,7 +18,8 @@
     "require": {
         "php": "^7.4|^8.0",
         "illuminate/support": "^8.0",
-        "spatie/laravel-collection-macros": "^7.4.0"
+        "spatie/laravel-collection-macros": "^7.4",
+	    "ext-json": "*"
     },
     "require-dev": {
         "orchestra/testbench": "^6.0",
@@ -26,18 +27,15 @@
     },
     "autoload": {
         "psr-4": {
-            "Evelution87\\AlpineTables\\": "src"
+            "Evelution\\AlpineTables\\": "src"
         }
     },
     "autoload-dev": {
-        "psr-4": {
-            "Evelution87\\AlpineTables\\Tests\\": "tests"
-        }
+        "psr-4": {}
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
-
     },
     "config": {
         "sort-packages": true
@@ -45,10 +43,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Evelution87\\AlpineTables\\AlpineTablesServiceProvider"
+                "Evelution\\AlpineTables\\AlpineTablesServiceProvider"
             ],
             "aliases": {
-                "AlpineTables": "Evelution87\\AlpineTables\\AlpineTablesFacade"
+                "AlpineTables": "Evelution\\AlpineTables\\AlpineTablesFacade"
             }
         }
     }

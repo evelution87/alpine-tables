@@ -1,12 +1,10 @@
 <?php
 
-namespace Evelution87\AlpineTables\Traits;
+namespace Evelution\AlpineTables\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 
-use Barryvdh\Debugbar\Facade as Debugbar;
 use Illuminate\Support\Str;
 
 trait HasAlpineTable {
@@ -16,6 +14,10 @@ trait HasAlpineTable {
 	abstract public function alpineColumns();
 	
 	abstract public function alpineSearchColumns();
+	
+	public function alpineScope( $query ) {
+		return $query;
+	}
 	
 	public function _alpineColumns() {
 		return collect( $this->alpineColumns() )->pluckMany( [ 'key', 'label', 'filter', 'class', 'format' ] );
@@ -35,7 +37,8 @@ trait HasAlpineTable {
 		
 		$skip = ( max( 0, $page - 1 ) * $per_page );
 		
-		$model         = new ( $this->alpineModel() );
+		$model_classname = $this->alpineModel();
+		$model         = new $model_classname;
 		$model_columns = $model->getConnection()->getSchemaBuilder()->getColumnListing( $model->getTable() );
 		$columns       = collect( $this->alpineColumns() );
 		$post_query    = false;
@@ -54,6 +57,8 @@ trait HasAlpineTable {
 		
 		// Get initial query object
 		$items = $model::query();
+		
+		$items = $this->alpineScope( $items );
 		
 		// Get total count (before any filtering or searching)
 		$total_count = $items->count();
