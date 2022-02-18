@@ -70,6 +70,7 @@ export default function ( data = {} ) {
 		loadItems( initial_load ) {
 			this.loading = true;
 			let data = { alpine: this.filters };
+			data.alpine.page = this.page;
 			if ( initial_load ) {
 				data.get = 'columns';
 			}
@@ -124,9 +125,9 @@ export default function ( data = {} ) {
 				return output;
 			}
 			
-			if (format instanceof Function) {
+			if ( format instanceof Function ) {
 				
-				value = format(value);
+				value = format( value );
 				
 			} else {
 				
