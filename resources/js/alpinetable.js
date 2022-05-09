@@ -120,7 +120,7 @@ export default function ( data = {} ) {
 		format( value, format ) {
 			
 			if ( Array.isArray( value ) ) {
-				return value.map( item => this.format( item, format ) ).join( ', ' );
+				return value.map( item => this.format( item, format ) ).join( '' );
 			} else if ( 'object' === typeof value ) {
 				let output = value.value || value[0] || null;
 				if ( value.link ) {
