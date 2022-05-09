@@ -204,7 +204,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       if (Array.isArray(value)) {
         return value.map(function (item) {
           return _this4.format(item, _format);
-        }).join(', ');
+        }).join('');
       } else if ('object' === _typeof(value)) {
         var output = value.value || value[0] || null;
 
