@@ -54,8 +54,20 @@ public function alpineColumns() {
 Optional:
 `alpineSearchColumns()` can be used to define the columns that can be searched. By default it returns a list of all columns defined by `alpineColumns()`, but you might want to customise this.
 
+### Adding to a View
+To insert a table into a view, you can use the `<x-alpine-table>` blade component.
+```blade
+<x-alpine-table route="{{ route('ajax.alpine.example') }}" key="example"></x-alpine-table>
+```
+* The `route` attribute defines the AJAX route for loading table data. This route should be defined in your `routes.php` file. Example: 
+```php
+Route::post('ajax/example' [ ExampleController::class, 'alpineRequest'] );
+```
 
-### Changelog
+* The (optional) `key` attribute is used when saving settings such as filters to a user's local browser storage. Use a different key for each table to allow different filters to be saved. Alternatively you can use the same key to make the filters function across different tables.
+
+
+## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
