@@ -28,7 +28,7 @@
                     Results per Page:
                     <select x-model="filters.per_page">
                         <template x-for="per_page in [10,25,50,100]">
-                            <option x-text="per_page" :selected="filters.per_page === per_page.toString()"></option>
+                            <option x-text="per_page" :selected="filters.per_page.toString() === per_page.toString()"></option>
                         </template>
                     </select>
                 </div>
