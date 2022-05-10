@@ -75,7 +75,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
     // Data
     filters: this.$persist({
       page: 1,
-      per_page: 3,
+      per_page: 25,
       sort_by: null,
       sort_asc: true,
       search: '',
