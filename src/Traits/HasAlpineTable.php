@@ -7,13 +7,15 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Str;
 
-trait HasAlpineTable {
+trait HasAlpineTable
+{
 	
 	abstract public function alpineModel();
 	
 	abstract public function alpineColumns();
 	
-	public function alpineSearchColumns() {
+	public function alpineSearchColumns()
+	{
 		$cols   = collect( $this->alpineColumns() )->pluck( 'key' )->toArray();
 		$return = [];
 		foreach ( $cols as $col ) {
@@ -22,15 +24,18 @@ trait HasAlpineTable {
 		return $return;
 	}
 	
-	public function alpineScope( $query ) {
+	public function alpineScope( $query )
+	{
 		return $query;
 	}
 	
-	public function _alpineColumns() {
+	public function _alpineColumns()
+	{
 		return collect( $this->alpineColumns() )->pluckMany( [ 'key', 'label', 'filter', 'class', 'format' ] );
 	}
 	
-	public function alpineRequest( Request $request ) {
+	public function alpineRequest( Request $request )
+	{
 		
 		$alpine = (object)( $request->alpine ?? [] );
 		

@@ -9,7 +9,7 @@
         "prod": "npm run production",
         "production": "mix --production",
         "tw": "npx tailwindcss -i ./resources/css/app.css -o ./assets/css/app.css -w",
-        "tw-prod": "npx tailwindcss -i ./resources/css/app.css -o ./assets/css/app.css -w --minify"
+        "tw-prod": "npx tailwindcss -i ./resources/css/app.css -o ./assets/css/app.min.css -w --minify"
     },
     "devDependencies": {
         "@alpinejs/persist": "^3.9.0",

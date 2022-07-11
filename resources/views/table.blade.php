@@ -5,30 +5,47 @@
 <div x-data="alpinetable(data)">
 
     <div class="flex justify-end items-center space-x-4 mb-3 text-gray-700">
+        <div x-show="loading" class="flex items-center">
+            <svg class="animate-spin mr-2 h-5 w-5 text-lime-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Loading</span>
+        </div>
         <div x-show="show_search || filters.search.length" x-transition.opacity>
             <label for="search">Search: </label>
             <input type="text" x-model.debounce="filters.search" x-ref="search" id="search" class="bg-transparent outline-none border-0 border-b-2 border-gray-200 focus:ring-0 p-0" />
         </div>
         <div class="relative">
             <div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
-                <div class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="toggleSearch">
+                <a :title="show_search ? 'Cancel Search':'Search'" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="toggleSearch">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" x-show="!show_search" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" x-show="show_search" />
                     </svg>
-                </div>
-                <div class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
+                </a>
+                <a title="Filters" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
-                </div>
+                </a>
+                <a title="Reset Filters & Search" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-show="filtered" x-on:click="resetFilters">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                </a>
+                <a title="Refresh" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="loadItems">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </a>
             </div>
             <div class="absolute top-full right-0 bg-white rounded-md shadow-sm p-3" x-show="show_filters" x-transition x-on:click.outside="show_filters=false">
                 <div class="whitespace-nowrap">
                     Results per Page:
                     <select x-model="filters.per_page">
                         <template x-for="per_page in [10,25,50,100]">
-                            <option x-text="per_page" :selected="filters.per_page === per_page.toString()"></option>
+                            <option x-text="per_page" :selected="filters.per_page.toString() === per_page.toString()"></option>
                         </template>
                     </select>
                 </div>
@@ -73,7 +90,7 @@
                 <tr class="hover:bg-gray-50">
 
                     <template x-for="column in columns">
-                        <td class="px-6 py-4 whitespace-nowrap" :class="column.class || ''" x-html="render(item,column)"></td>
+                        <td class="px-6 py-4" :class="column.class || ''" x-html="render(item,column)"></td>
                     </template>
 
                 </tr>
