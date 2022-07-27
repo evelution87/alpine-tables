@@ -16,10 +16,10 @@
         }
     ],
     "require": {
-        "php": "^7.4|^8.0",
-        "illuminate/support": "^8.0",
-        "spatie/laravel-collection-macros": "^7.4",
-	    "ext-json": "*"
+        "php": "^8.0",
+        "laravel/framework": "^9.0",
+        "spatie/laravel-collection-macros": "^7.10",
+	"ext-json": "*"
     },
     "require-dev": {
         "orchestra/testbench": "^6.0",
