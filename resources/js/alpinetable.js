@@ -213,15 +213,20 @@ export default function ( data = {} ) {
 			return this.format( item[column.key], column.format );
 		},
 		replaceIcons() {
-			document.querySelectorAll( 'a[data-icon]' ).forEach( $icon => {
-				let icon = $icon.dataset( 'icon' );
+			document.querySelectorAll( 'i[data-icon]' ).forEach( $icon => {
+				let icon = $icon.getAttribute( 'data-icon' );
 				if ( !icon.includes( '/' ) ) {
 					icon = 'outline/' + icon;
 				}
-				axios.get( '/vendor/alpine-tables/assets/icons/' + icon + '.svg' )
-					.then( result => {
-						$icon.innerHTML = result.data;
-					} );
+				if ( null !== window.localStorage.getItem( 'icon-' + icon ) ) {
+					$icon.innerHTML = window.localStorage.getItem( 'icon-' + icon );
+				} else {
+					axios.get( '/vendor/alpine-tables/icons/' + icon + '.svg' )
+						.then( result => {
+							window.localStorage.setItem( 'icon-' + icon, result.data );
+							$icon.innerHTML = result.data;
+						} );
+				}
 			} );
 		},
 		setSort( key ) {

@@ -3,5 +3,9 @@
 @tailwind utilities;
 
 [x-cloak] {
-    display: none;
+	@apply hidden;
+}
+
+.actions i[data-icon] svg {
+	@apply w-[1.5rem] h-[1.5rem] cursor-pointer;
 }
