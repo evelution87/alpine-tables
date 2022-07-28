@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Get a Collection with only the specified keys.
+ * Sourced from https://github.com/spatie/laravel-collection-macros/
  *
  * @param array $keys
  *

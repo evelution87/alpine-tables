@@ -48,7 +48,7 @@ class AlpineTablesServiceProvider extends ServiceProvider
 		foreach ( [
 			          'pluckMany' => PluckMany::class,
 		          ] as $macro => $class ) {
-			Collection::macro( $macro, $class );
+			Collection::macro( $macro, app($class)() );
 		}
 	}
 	
