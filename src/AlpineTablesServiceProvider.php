@@ -24,7 +24,7 @@ class AlpineTablesServiceProvider extends ServiceProvider
 			$this->publishes( [
 				base_path() . '/vendor/evelution87/heroicons/optimized' => __DIR__ . '/../assets/icons',
 				__DIR__ . '/../assets'                                  => public_path( 'vendor/alpine-tables' ),
-			], 'laravel-assets' );
+			], 'alpine-tables' );
 			
 			$this->commands( [
 				Publish::class,

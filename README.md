@@ -14,7 +14,7 @@ You can install the package via composer:
 composer require evelution87/alpine-tables
 ```
 
-The required assets will be published by the `laravel-assets` tag, but if you need to publish them manually you can do so by running:
+The required assets must be published by running:
 
 ```bash
 php artisan alpinetables:publish
