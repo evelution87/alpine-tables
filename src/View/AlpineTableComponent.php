@@ -14,9 +14,9 @@ class AlpineTableComponent extends Component
 		return json_encode( $this->tableData );
 	}
 	
-	public function __construct( $key, $route )
+	public function __construct( $key, $route, $rule = '' )
 	{
-		$this->tableData = compact( 'key', 'route' );
+		$this->tableData = compact( 'key', 'route', 'rule' );
 	}
 	
 	public function render()

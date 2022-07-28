@@ -14,6 +14,16 @@ trait HasAlpineTable
 	
 	abstract public function alpineColumns();
 	
+	/**
+	 * @return array
+	 *
+	 * Define the columns used for searching. By default, this uses all columns defined in alpineColumns().
+	 * If one of those columns is not a native table column of the model it will trigger collection based searching,
+	 *      which is significantly slower on large datasets.
+	 * You can override this in the Controller to exclude certain columns or to define query-based relation searches
+	 * Example: on a PostController, define 'user.name' => true to search for posts by the user's name
+	 * Note: the "true" value for each item in this array is currently irrelevant.
+	 */
 	public function alpineSearchColumns()
 	{
 		$cols   = collect( $this->alpineColumns() )->pluck( 'key' )->toArray();
@@ -24,9 +34,21 @@ trait HasAlpineTable
 		return $return;
 	}
 	
-	public function alpineScope( $query )
+	/**
+	 * @param $query
+	 * @return mixed
+	 *
+	 * Define a default scope for database queries.
+	 * Follows standard Laravel conventions
+	 */
+	public function alpineScope( $query, $rule = null )
 	{
 		return $query;
+	}
+	
+	public function alpineDefaultSort()
+	{
+		return [ null, true ];
 	}
 	
 	public function _alpineColumns()
@@ -44,8 +66,9 @@ trait HasAlpineTable
 		$search   = $alpine->search ?? false;
 		$filters  = $alpine->filters ?? [];
 		
-		$sort_by  = $alpine->sort_by ?? null;
-		$sort_asc = $alpine->sort_asc ?? true;
+		$sort_by  = $alpine->sort_by ?? $this->alpineDefaultSort()[0];
+		$sort_asc = $alpine->sort_asc ?? $this->alpineDefaultSort()[1];
+		$rule     = $request->rule ?? null;
 		
 		$skip = ( max( 0, $page - 1 ) * $per_page );
 		
@@ -70,7 +93,7 @@ trait HasAlpineTable
 		// Get initial query object
 		$items = $model::query();
 		
-		$items = $this->alpineScope( $items );
+		$items = $this->alpineScope( $items, $rule );
 		
 		// Get total count (before any filtering or searching)
 		$total_count = $items->count();
@@ -199,7 +222,7 @@ trait HasAlpineTable
 		}
 		
 		if ( config( 'app.debug', false ) ) {
-			$return['debug'] = compact( 'page', 'per_page', 'skip', 'sort_by', 'sort_asc' );
+			$return['debug'] = compact( 'page', 'per_page', 'skip', 'sort_by', 'sort_asc', 'search_columns' );
 		}
 		
 		return $return;
