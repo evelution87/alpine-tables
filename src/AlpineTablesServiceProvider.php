@@ -30,11 +30,11 @@ class AlpineTablesServiceProvider extends ServiceProvider
 				Publish::class,
 			] );
 			
-			$this->registerMacros();
-			
 		} else {
 			
 			Blade::component( 'alpine-table', AlpineTableComponent::class );
+			
+			$this->registerMacros();
 			
 		}
 		
