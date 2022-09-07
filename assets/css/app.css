@@ -505,14 +505,14 @@ select {
   transition-duration: 150ms;
 }
 
+[x-cloak] {
+  display: none;
+}
+
 .actions i[data-icon] svg {
   height: 1.5rem;
   width: 1.5rem;
   cursor: pointer;
-}
-
-[x-cloak] {
-  display: none;
 }
 
 .hover\:bg-gray-50:hover {

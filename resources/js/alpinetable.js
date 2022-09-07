@@ -79,6 +79,7 @@ export default function ( data = {} ) {
 			this.show_search = false;
 			this.show_filters = false;
 			this.filtered = false;
+			this.clearIconStorage();
 			this.$nextTick( () => {
 				this.haltRequests = false;
 				this.loadItems();
@@ -210,6 +211,14 @@ export default function ( data = {} ) {
 		},
 		render( item, column ) {
 			return this.format( item[column.key], column.format );
+		},
+		clearIconStorage() {
+			Object.keys( window.localStorage ).forEach( key => {
+				if ( key.substring( 0, 5 ) === 'icon-' ) {
+					window.localStorage.removeItem( key );
+				}
+			} );
+			this.$nextTick( this.replaceIcons );
 		},
 		replaceIcons() {
 			document.querySelectorAll( 'i[data-icon]' ).forEach( $icon => {
