@@ -18,7 +18,7 @@
 	"require": {
 		"php": "^8.0",
 		"ext-json": "*",
-		"evelution87/heroicons": "^1.0",
+		"evelution87/heroicons": "^2.0",
 		"laravel/framework": "^9.0"
 	},
 	"autoload": {

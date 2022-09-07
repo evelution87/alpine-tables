@@ -76,6 +76,8 @@ export default function ( data = {} ) {
 			// TODO Maybe make this more precise to reduce attempted extra loads
 			this.haltRequests = true;
 			this.filters = JSON.parse( JSON.stringify( this.default_filters ) );
+			this.show_search = false;
+			this.show_filters = false;
 			this.filtered = false;
 			this.$nextTick( () => {
 				this.haltRequests = false;
@@ -88,11 +90,8 @@ export default function ( data = {} ) {
 					this.columns = response.data;
 					this.loadItems();
 				} )
-				.catch( response => {
-				
-				} )
-				.finally( () => {
-				
+				.catch( ( error ) => {
+					console.log( 'Error', error );
 				} );
 		},
 		loadItems( initial_load ) {
@@ -131,8 +130,8 @@ export default function ( data = {} ) {
 						this.$nextTick( window.feather.replace );
 					}
 				} )
-				.catch( response => {
-				
+				.catch( ( error ) => {
+					console.log( 'Error', error );
 				} )
 				.finally( () => {
 					this.loading = false;

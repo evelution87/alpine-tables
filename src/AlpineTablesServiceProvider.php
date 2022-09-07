@@ -22,8 +22,8 @@ class AlpineTablesServiceProvider extends ServiceProvider
 		if ( $this->app->runningInConsole() ) {
 			
 			$this->publishes( [
-				base_path() . '/vendor/evelution87/heroicons/optimized' => __DIR__ . '/../assets/icons',
-				__DIR__ . '/../assets'                                  => public_path( 'vendor/alpine-tables' ),
+				base_path() . '/vendor/evelution87/heroicons/optimized/24' => __DIR__ . '/../assets/icons',
+				__DIR__ . '/../assets'                                     => public_path( 'vendor/alpine-tables' ),
 			], 'alpine-tables' );
 			
 			$this->commands( [
@@ -48,7 +48,7 @@ class AlpineTablesServiceProvider extends ServiceProvider
 		foreach ( [
 			          'pluckMany' => PluckMany::class,
 		          ] as $macro => $class ) {
-			Collection::macro( $macro, app($class)() );
+			Collection::macro( $macro, app( $class )() );
 		}
 	}
 	
