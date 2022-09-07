@@ -72,6 +72,10 @@ export default function ( data = {} ) {
 				this.filters.page = 1;
 			}
 		},
+		refresh() {
+			this.clearIconStorage();
+			this.loadItems()
+		},
 		resetFilters() {
 			// TODO Maybe make this more precise to reduce attempted extra loads
 			this.haltRequests = true;
@@ -79,7 +83,6 @@ export default function ( data = {} ) {
 			this.show_search = false;
 			this.show_filters = false;
 			this.filtered = false;
-			this.clearIconStorage();
 			this.$nextTick( () => {
 				this.haltRequests = false;
 				this.loadItems();
