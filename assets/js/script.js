@@ -147,6 +147,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         this.filters.page = 1;
       }
     },
+    refresh: function refresh() {
+      this.clearIconStorage();
+      this.loadItems();
+    },
     resetFilters: function resetFilters() {
       var _this2 = this;
 
@@ -304,6 +308,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
     },
     render: function render(item, column) {
       return this.format(item[column.key], column.format);
+    },
+    clearIconStorage: function clearIconStorage() {
+      Object.keys(window.localStorage).forEach(function (key) {
+        if (key.substring(0, 5) === 'icon-') {
+          window.localStorage.removeItem(key);
+        }
+      });
+      this.$nextTick(this.replaceIcons);
     },
     replaceIcons: function replaceIcons() {
       document.querySelectorAll('i[data-icon]').forEach(function ($icon) {
