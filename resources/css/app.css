@@ -10,6 +10,10 @@
 	@apply inline-block align-bottom;
 }
 
+.actions [data-icon], .toolbar [data-icon] {
+	@apply w-6 h-6;
+}
+
 [data-icon] svg {
 	@apply w-full h-full;
 }

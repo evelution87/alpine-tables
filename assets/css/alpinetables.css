@@ -420,6 +420,10 @@ select {
     display: inline-block;
     vertical-align: bottom;
 }
+.actions [data-icon], .toolbar [data-icon] {
+    height: 1.5rem;
+    width: 1.5rem;
+}
 [data-icon] svg {
     height: 100%;
     width: 100%;

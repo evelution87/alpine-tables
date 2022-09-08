@@ -18,22 +18,22 @@
 			<input type="text" x-model.debounce="filters.search" x-ref="search" id="search"
 			       class="bg-transparent outline-none border-0 border-b-2 border-gray-200 focus:ring-0 p-0"/>
 		</div>
-		<div class="relative">
+		<div class="relative toolbar">
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
 				<a :title="show_search ? 'Cancel Search':'Search'" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 				   x-on:click="toggleSearch">
-					<i data-icon="magnifying-glass" class="w-6 h-6" x-show="!show_search"></i>
-					<i data-icon="x" class="w-6 h-6" x-show="show_search"></i>
+					<i data-icon="magnifying-glass" x-show="!show_search"></i>
+					<i data-icon="x" x-show="show_search"></i>
 				</a>
 				<a title="Filters" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
-					<i data-icon="adjustments-vertical" class="w-6 h-6"></i>
+					<i data-icon="adjustments-vertical"></i>
 				</a>
 				<a title="Reset Filters & Search" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-show="filtered"
 				   x-on:click="resetFilters">
-					<i data-icon="arrow-uturn-left" class="w-6 h-6"></i>
+					<i data-icon="arrow-uturn-left"></i>
 				</a>
 				<a title="Refresh" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="refresh">
-					<i data-icon="arrow-path" class="w-6 h-6"></i>
+					<i data-icon="arrow-path"></i>
 				</a>
 			</div>
 			<div class="absolute top-full right-0 bg-white rounded-md shadow-sm p-3" x-show="show_filters" x-transition x-on:click.outside="show_filters=false">
@@ -96,7 +96,7 @@
 		</table>
 	</div>
 	
-	<div class="flex justify-between mt-3 text-gray-700">
+	<div class="flex justify-between mt-3 text-gray-700 toolbar">
 		<div>
 			<div x-show="loading" class="flex items-center">
 				<svg class="animate-spin mr-2 h-5 w-5 text-lime-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -112,7 +112,7 @@
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
 				<div class="p-2 transition" x-on:click="pageDown"
 				     :class="Number(filters.page) === 1 ? 'text-gray-200':'cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
-					<i data-icon="chevron-left" class="w-6 h-6"></i>
+					<i data-icon="chevron-left"></i>
 				</div>
 				<div>
 					<select x-model="filters.page" class="border-none focus:ring-0 cursor-pointer text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-50">
@@ -123,7 +123,7 @@
 				</div>
 				<div class="p-2 transition" x-on:click="pageUp"
 				     :class="Number(filters.page) === Number(max_pages) ? 'text-gray-200':'cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
-					<i data-icon="chevron-right" class="w-6 h-6"></i>
+					<i data-icon="chevron-right"></i>
 				</div>
 			</div>
 		</template>
