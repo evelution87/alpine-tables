@@ -5943,7 +5943,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         } else {
           axios.get('/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
             window.localStorage.setItem('icon-' + icon, result.data);
-            var newElement = document.createElement(result.data);
+            var newElement = document.createElement('template');
+            newElement.innerHTML = result.data;
+            newElement = newElement.content.children[0];
             Object.keys(attributes).forEach(function (key) {
               newElement.setAttribute(key, attributes[key]);
             });

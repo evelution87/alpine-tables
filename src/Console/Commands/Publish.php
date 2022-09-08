@@ -45,10 +45,7 @@ class Publish extends Command
 		if ( File::exists( $path ) ) {
 			File::deleteDirectory( $path );
 		}
-		
-		sleep( 0.25 );
 		$this->info( 'Done' );
-		sleep( 0.25 );
 		
 		$this->info( 'Publishing AlpineTables Assets' );
 		

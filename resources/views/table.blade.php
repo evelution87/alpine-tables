@@ -23,7 +23,7 @@
 				<a :title="show_search ? 'Cancel Search':'Search'" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 				   x-on:click="toggleSearch">
 					<i data-icon="magnifying-glass" x-show="!show_search"></i>
-					<i data-icon="x" x-show="show_search"></i>
+					<i data-icon="x-mark" x-show="show_search"></i>
 				</a>
 				<a title="Filters" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
 					<i data-icon="adjustments-vertical"></i>

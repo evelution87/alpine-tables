@@ -238,7 +238,9 @@ export default function ( data = {} ) {
 					axios.get( '/vendor/alpine-tables/icons/' + icon + '.svg' )
 						.then( result => {
 							window.localStorage.setItem( 'icon-' + icon, result.data );
-							let newElement = document.createElement( result.data );
+							let newElement = document.createElement( 'template' );
+							newElement.innerHTML = result.data;
+							newElement = newElement.content.children[0];
 							Object.keys( attributes ).forEach( key => {
 								newElement.setAttribute( key, attributes[key] );
 							} );
