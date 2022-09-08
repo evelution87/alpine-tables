@@ -39,12 +39,16 @@ class Publish extends Command
 	public function handle()
 	{
 		
-		$this->info( 'Deleting old AlpineTables icons' );
+		$this->info( 'Deleting old AlpineTables Assets' );
 		
-		$path = __DIR__ . '/../assets/icons';
+		$path = public_path( 'vendor/alpine-tables' );
 		if ( File::exists( $path ) ) {
 			File::deleteDirectory( $path );
 		}
+		
+		sleep( 0.25 );
+		$this->info( 'Done' );
+		sleep( 0.25 );
 		
 		$this->info( 'Publishing AlpineTables Assets' );
 		
