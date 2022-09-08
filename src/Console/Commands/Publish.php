@@ -3,8 +3,10 @@
 namespace Evelution\AlpineTables\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
-class Publish extends Command {
+class Publish extends Command
+{
 	/**
 	 * The name and signature of the console command.
 	 *
@@ -24,7 +26,8 @@ class Publish extends Command {
 	 *
 	 * @return void
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		parent::__construct();
 	}
 	
@@ -33,7 +36,15 @@ class Publish extends Command {
 	 *
 	 * @return int
 	 */
-	public function handle() {
+	public function handle()
+	{
+		
+		$this->info( 'Deleting old AlpineTables icons' );
+		
+		$path = __DIR__ . '/../assets/icons';
+		if ( File::exists( $path ) ) {
+			File::deleteDirectory( $path );
+		}
 		
 		$this->info( 'Publishing AlpineTables Assets' );
 		
