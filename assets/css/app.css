@@ -497,16 +497,16 @@ select {
   display: none;
 }
 
-i[data-icon] {
+[data-icon] {
   display: inline-block;
 }
 
-i[data-icon] svg {
+[data-icon] svg {
   height: 100%;
   width: 100%;
 }
 
-.actions i[data-icon] svg {
+.actions [data-icon] svg {
   cursor: pointer;
 }
 

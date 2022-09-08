@@ -6,14 +6,14 @@
 	@apply hidden;
 }
 
-i[data-icon] {
+[data-icon] {
 	@apply inline-block;
 }
 
-i[data-icon] svg {
+[data-icon] svg {
 	@apply w-full h-full;
 }
 
-.actions i[data-icon] svg {
+.actions [data-icon] svg {
 	@apply cursor-pointer;
 }
