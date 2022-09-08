@@ -22,18 +22,18 @@
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
 				<a :title="show_search ? 'Cancel Search':'Search'" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 				   x-on:click="toggleSearch">
-					<i data-icon="magnifying-glass" x-show="!show_search"></i>
-					<i data-icon="x" x-show="show_search"></i>
+					<i data-icon="magnifying-glass" class="w-6 h-6" x-show="!show_search"></i>
+					<i data-icon="x" class="w-6 h-6" x-show="show_search"></i>
 				</a>
 				<a title="Filters" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
-					<i data-icon="adjustments-vertical"></i>
+					<i data-icon="adjustments-vertical" class="w-6 h-6"></i>
 				</a>
 				<a title="Reset Filters & Search" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-show="filtered"
 				   x-on:click="resetFilters">
-					<i data-icon="arrow-uturn-left"></i>
+					<i data-icon="arrow-uturn-left" class="w-6 h-6"></i>
 				</a>
 				<a title="Refresh" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="refresh">
-					<i data-icon="arrow-path"></i>
+					<i data-icon="arrow-path" class="w-6 h-6"></i>
 				</a>
 			</div>
 			<div class="absolute top-full right-0 bg-white rounded-md shadow-sm p-3" x-show="show_filters" x-transition x-on:click.outside="show_filters=false">
@@ -71,8 +71,8 @@
 						<div class="flex items-center hover:text-gray-700 cursor-pointer">
 							<span :class="{'sr-only':column.sr_only||false}" x-text="column.label" x-on:click="setSort(column.key)"></span>
 							<div x-on:click="setSort(column.key)" :class="{'opacity-0':filters.sort_by !== column.key}">
-								<i data-icon="arrow-small-up" x-show="filters.sort_asc"></i>
-								<i data-icon="arrow-small-down" x-show="!filters.sort_asc"></i>
+								<i data-icon="arrow-small-up" class="w-6 h-6" x-show="filters.sort_asc"></i>
+								<i data-icon="arrow-small-down" class="w-6 h-6" x-show="!filters.sort_asc"></i>
 							</div>
 						</div>
 					</th>
@@ -112,7 +112,7 @@
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
 				<div class="p-2 transition" x-on:click="pageDown"
 				     :class="Number(filters.page) === 1 ? 'text-gray-200':'cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
-					<i data-icon="chevron-left"></i>
+					<i data-icon="chevron-left" class="w-6 h-6"></i>
 				</div>
 				<div>
 					<select x-model="filters.page" class="border-none focus:ring-0 cursor-pointer text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-50">
@@ -123,7 +123,7 @@
 				</div>
 				<div class="p-2 transition" x-on:click="pageUp"
 				     :class="Number(filters.page) === Number(max_pages) ? 'text-gray-200':'cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
-					<i data-icon="chevron-right"></i>
+					<i data-icon="chevron-right" class="w-6 h-6"></i>
 				</div>
 			</div>
 		</template>
