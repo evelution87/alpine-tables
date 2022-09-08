@@ -20,19 +20,19 @@
 		</div>
 		<div class="relative">
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
-				<a :title="show_search ? 'Cancel Search':'Search'" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+				<a :title="show_search ? 'Cancel Search':'Search'" class="flex p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 				   x-on:click="toggleSearch">
 					<i data-icon="magnifying-glass" x-show="!show_search"></i>
 					<i data-icon="x" x-show="show_search"></i>
 				</a>
-				<a title="Filters" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
+				<a title="Filters" class="flex p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="show_filters = !show_filters">
 					<i data-icon="adjustments-vertical"></i>
 				</a>
-				<a title="Reset Filters & Search" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-show="filtered"
+				<a title="Reset Filters & Search" class="flex p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-show="filtered"
 				   x-on:click="resetFilters">
 					<i data-icon="arrow-uturn-left"></i>
 				</a>
-				<a title="Refresh" class="block p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="refresh">
+				<a title="Refresh" class="flex p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50" x-on:click="refresh">
 					<i data-icon="arrow-path"></i>
 				</a>
 			</div>
