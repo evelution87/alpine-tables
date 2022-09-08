@@ -233,7 +233,13 @@ export default function ( data = {} ) {
 					icon = 'outline/' + icon;
 				}
 				if ( null !== window.localStorage.getItem( 'icon-' + icon ) ) {
-					$icon.innerHTML = window.localStorage.getItem( 'icon-' + icon );
+					let newElement = document.createElement( 'template' );
+					newElement.innerHTML = window.localStorage.getItem( 'icon-' + icon );
+					newElement = newElement.content.children[0];
+					Object.keys( attributes ).forEach( key => {
+						newElement.setAttribute( key, attributes[key] );
+					} );
+					$icon.replaceWith( newElement );
 				} else {
 					axios.get( '/vendor/alpine-tables/icons/' + icon + '.svg' )
 						.then( result => {

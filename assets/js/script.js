@@ -335,7 +335,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         }
 
         if (null !== window.localStorage.getItem('icon-' + icon)) {
-          $icon.innerHTML = window.localStorage.getItem('icon-' + icon);
+          var newElement = document.createElement('template');
+          newElement.innerHTML = window.localStorage.getItem('icon-' + icon);
+          newElement = newElement.content.children[0];
+          Object.keys(attributes).forEach(function (key) {
+            newElement.setAttribute(key, attributes[key]);
+          });
+          $icon.replaceWith(newElement);
         } else {
           axios.get('/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
             window.localStorage.setItem('icon-' + icon, result.data);
