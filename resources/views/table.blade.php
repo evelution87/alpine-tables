@@ -115,7 +115,7 @@
 					<i data-icon="chevron-left"></i>
 				</div>
 				<div>
-					<select x-model="filters.page" class="border-none focus:ring-0 cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+					<select x-model="filters.page" class="border-none focus:ring-0 cursor-pointer text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-50">
 						<template x-for="page in max_pages">
 							<option x-text="page" :selected="Number(page) === Number(filters.page)"></option>
 						</template>

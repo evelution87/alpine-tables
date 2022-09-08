@@ -219,9 +219,6 @@ select {
 .mt-3 {
     margin-top: 0.75rem;
 }
-.block {
-    display: block;
-}
 .flex {
     display: flex;
 }
@@ -413,16 +410,15 @@ select {
 [x-cloak] {
     display: none;
 }
-i[data-icon] {
+[data-icon] {
     display: inline-block;
-    height: 1.5rem;
-    width: 1.5rem;
+    vertical-align: bottom;
 }
-i[data-icon] svg {
+[data-icon] svg {
     height: 100%;
     width: 100%;
 }
-.actions i[data-icon] svg {
+.actions [data-icon] svg {
     cursor: pointer;
 }
 .hover\:bg-gray-50:hover {
