@@ -26,12 +26,7 @@ trait HasAlpineTable
 	 */
 	public function alpineSearchColumns()
 	{
-		$cols   = collect( $this->alpineColumns() )->pluck( 'key' )->toArray();
-		$return = [];
-		foreach ( $cols as $col ) {
-			$return[ $col ] = true;
-		}
-		return $return;
+		return $this->_alpineSearchColumns();
 	}
 	
 	/**
@@ -49,6 +44,16 @@ trait HasAlpineTable
 	public function alpineDefaultSort()
 	{
 		return [ null, true ];
+	}
+	
+	public function _alpineSearchColumns()
+	{
+		$cols   = collect( $this->alpineColumns() )->pluck( 'key' )->toArray();
+		$return = [];
+		foreach ( $cols as $col ) {
+			$return[ $col ] = true;
+		}
+		return $return;
 	}
 	
 	public function _alpineColumns()
