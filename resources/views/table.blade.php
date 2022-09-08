@@ -71,8 +71,8 @@
 						<div class="flex items-center hover:text-gray-700 cursor-pointer">
 							<span :class="{'sr-only':column.sr_only||false}" x-text="column.label" x-on:click="setSort(column.key)"></span>
 							<div x-on:click="setSort(column.key)" :class="{'opacity-0':filters.sort_by !== column.key}">
-								<i data-icon="arrow-small-up" class="w-6 h-6" x-show="filters.sort_asc"></i>
-								<i data-icon="arrow-small-down" class="w-6 h-6" x-show="!filters.sort_asc"></i>
+								<i data-icon="arrow-small-up" class="w-4 h-4 stroke-2" x-show="filters.sort_asc"></i>
+								<i data-icon="arrow-small-down" class="w-4 h-4 stroke-2" x-show="!filters.sort_asc"></i>
 							</div>
 						</div>
 					</th>

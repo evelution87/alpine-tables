@@ -74,7 +74,7 @@ export default function ( data = {} ) {
 		},
 		refresh() {
 			this.clearIconStorage();
-			this.loadItems()
+			this.loadItems();
 		},
 		resetFilters() {
 			// TODO Maybe make this more precise to reduce attempted extra loads
@@ -224,8 +224,11 @@ export default function ( data = {} ) {
 			this.$nextTick( this.replaceIcons );
 		},
 		replaceIcons() {
-			document.querySelectorAll( 'i[data-icon]' ).forEach( $icon => {
-				let icon = $icon.getAttribute( 'data-icon' );
+			document.querySelectorAll( '[data-icon]' ).forEach( $icon => {
+				let icon = $icon.getAttribute( 'data-icon' ),
+					attributes = $icon.getAttributeNames().reduce( ( acc, name ) => {
+						return { ...acc, [name]: $icon.getAttribute( name ) };
+					}, {} );
 				if ( !icon.includes( '/' ) ) {
 					icon = 'outline/' + icon;
 				}
@@ -235,7 +238,11 @@ export default function ( data = {} ) {
 					axios.get( '/vendor/alpine-tables/icons/' + icon + '.svg' )
 						.then( result => {
 							window.localStorage.setItem( 'icon-' + icon, result.data );
-							$icon.innerHTML = result.data;
+							let newElement = document.createElement( result.data );
+							Object.keys( attributes ).forEach( key => {
+								newElement.setAttribute( key, attributes[key] );
+							} );
+							$icon.replaceWith( newElement );
 						} );
 				}
 			} );
