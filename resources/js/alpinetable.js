@@ -149,9 +149,9 @@ export default function ( data = {} ) {
 			}
 			let str = '';
 			if ( this.max_pages === 1 ) {
-				str = 'Showing ' + this.results + ' results';
+				str = 'Showing ' + this.results + (this.results !== 1 ? ' results' : ' result');
 			} else {
-				str = 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + ' results';
+				str = 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + (this.results !== 1 ? ' results' : ' result');
 			}
 			if ( this.results !== this.total_results ) {
 				str += ' (' + this.total_results + ' total)';
