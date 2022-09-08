@@ -7,7 +7,7 @@
 }
 
 [data-icon] {
-	@apply inline-block;
+	@apply inline-block align-bottom;
 }
 
 [data-icon] svg {
