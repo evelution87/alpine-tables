@@ -54,6 +54,8 @@ export default function ( data = {} ) {
 			this.$watch( 'filters.search', () => this.resetPage() );
 			this.$watch( 'filters.filters', () => this.resetPage() );
 			
+			this.$nextTick( this.replaceIcons );
+			
 			if ( this.filters.search.length ) {
 				this.show_search = true;
 			}
