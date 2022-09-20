@@ -135,6 +135,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.$watch('filters.filters', function () {
         return _this.resetPage();
       });
+      this.$nextTick(this.replaceIcons);
 
       if (this.filters.search.length) {
         this.show_search = true;
@@ -246,9 +247,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       var str = '';
 
       if (this.max_pages === 1) {
-        str = 'Showing ' + this.results + ' results';
+        str = 'Showing ' + this.results + (this.results !== 1 ? ' results' : ' result');
       } else {
-        str = 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + ' results';
+        str = 'Showing ' + this.from + ' to ' + this.to + ' of ' + this.results + (this.results !== 1 ? ' results' : ' result');
       }
 
       if (this.results !== this.total_results) {

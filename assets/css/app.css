@@ -281,6 +281,10 @@ select {
   min-width: 100%;
 }
 
+.flex-grow {
+  flex-grow: 1;
+}
+
 @-webkit-keyframes spin {
   to {
     transform: rotate(360deg);
@@ -400,9 +404,9 @@ select {
   padding: 0.75rem;
 }
 
-.px-6 {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
 }
 
 .py-3 {
@@ -410,23 +414,18 @@ select {
   padding-bottom: 0.75rem;
 }
 
-.py-4 {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
 .text-left {
   text-align: left;
-}
-
-.text-xs {
-  font-size: 0.75rem;
-  line-height: 1rem;
 }
 
 .text-sm {
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 
 .font-medium {
@@ -522,6 +521,14 @@ select {
 
 .actions [data-icon] svg {
   cursor: pointer;
+}
+
+.first\:pl-5:first-child {
+  padding-left: 1.25rem;
+}
+
+.last\:pr-5:last-child {
+  padding-right: 1.25rem;
 }
 
 .hover\:bg-gray-50:hover {
