@@ -70,7 +70,7 @@
 			<tr>
 				
 				<template x-for="column in columns">
-					<th scope="col" class="px-3 first:pl-5 last:pr-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+					<th scope="col" class="pl-5 last:pr-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 						<div class="flex items-center hover:text-gray-700 cursor-pointer">
 							<span :class="{'sr-only':column.sr_only||false}" x-text="column.label" x-on:click="setSort(column.key)"></span>
 							<div x-on:click="setSort(column.key)" :class="{'opacity-0':filters.sort_by !== column.key}">
@@ -89,7 +89,7 @@
 				<tr class="hover:bg-gray-50">
 					
 					<template x-for="column in columns">
-						<td class="px-3 first:pl-5 last:pr-5 py-3" :class="column.class || ''" x-html="render(item,column)"></td>
+						<td class="pl-5 last:pr-5 py-3" :class="column.class || ''" x-html="render(item,column)"></td>
 					</template>
 				
 				</tr>

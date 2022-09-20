@@ -404,14 +404,13 @@ select {
   padding: 0.75rem;
 }
 
-.px-3 {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-}
-
 .py-3 {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+}
+
+.pl-5 {
+  padding-left: 1.25rem;
 }
 
 .text-left {
@@ -521,10 +520,6 @@ select {
 
 .actions [data-icon] svg {
   cursor: pointer;
-}
-
-.first\:pl-5:first-child {
-  padding-left: 1.25rem;
 }
 
 .last\:pr-5:last-child {
