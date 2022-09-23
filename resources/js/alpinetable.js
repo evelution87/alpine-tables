@@ -55,7 +55,7 @@ export default function ( data = {} ) {
 			this.$watch( 'filters.search', () => this.resetPage() );
 			this.$watch( 'filters.filters', () => this.resetPage() );
 			
-			this.$nextTick( this.replaceIcons );
+			this.$nextTick( () => this.replaceIcons() );
 			
 			if ( this.filters.search.length ) {
 				this.show_search = true;
@@ -132,7 +132,7 @@ export default function ( data = {} ) {
 					
 					this.items = response.data.items;
 					
-					this.$nextTick( this.replaceIcons );
+					this.$nextTick( () => this.replaceIcons() );
 					if ( 'undefined' !== typeof window.feather ) {
 						this.$nextTick( window.feather.replace );
 					}
@@ -224,7 +224,7 @@ export default function ( data = {} ) {
 					window.localStorage.removeItem( key );
 				}
 			} );
-			this.$nextTick( this.replaceIcons );
+			this.$nextTick( () => this.replaceIcons() );
 		},
 		replaceIcons() {
 			document.querySelectorAll( '[data-icon]' ).forEach( $icon => {

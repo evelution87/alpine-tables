@@ -136,7 +136,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.$watch('filters.filters', function () {
         return _this.resetPage();
       });
-      this.$nextTick(this.replaceIcons);
+      this.$nextTick(function () {
+        return _this.replaceIcons();
+      });
 
       if (this.filters.search.length) {
         this.show_search = true;
@@ -227,7 +229,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
         _this4.max_pages = Math.ceil(_this4.results / _this4.filters.per_page);
         _this4.items = response.data.items;
 
-        _this4.$nextTick(_this4.replaceIcons);
+        _this4.$nextTick(function () {
+          return _this4.replaceIcons();
+        });
 
         if ('undefined' !== typeof window.feather) {
           _this4.$nextTick(window.feather.replace);
@@ -318,15 +322,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       return this.format(item[column.key], column.format);
     },
     clearIconStorage: function clearIconStorage() {
+      var _this6 = this;
+
       Object.keys(window.localStorage).forEach(function (key) {
         if (key.substring(0, 5) === 'icon-') {
           window.localStorage.removeItem(key);
         }
       });
-      this.$nextTick(this.replaceIcons);
+      this.$nextTick(function () {
+        return _this6.replaceIcons();
+      });
     },
     replaceIcons: function replaceIcons() {
-      var _this6 = this;
+      var _this7 = this;
 
       document.querySelectorAll('[data-icon]').forEach(function ($icon) {
         var icon = $icon.getAttribute('data-icon'),
@@ -347,7 +355,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
           });
           $icon.replaceWith(newElement);
         } else {
-          axios.get(_this6.app_url + '/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
+          axios.get(_this7.app_url + '/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
             window.localStorage.setItem('icon-' + icon, result.data);
             var newElement = document.createElement('template');
             newElement.innerHTML = result.data;
@@ -376,13 +384,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.resetPage();
     },
     toggleSearch: function toggleSearch() {
-      var _this7 = this;
+      var _this8 = this;
 
       this.show_search = !this.show_search;
 
       if (this.show_search) {
         this.$nextTick(function () {
-          _this7.$refs.search.focus();
+          _this8.$refs.search.focus();
         });
       } else {
         this.filters.search = '';
