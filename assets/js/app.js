@@ -5699,6 +5699,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       search: '',
       filters: {}
     }).as((data.key || 'alpinetable') + '_filters'),
+    app_url: data.app_url || '',
     route: data.route,
     rule: data.rule || null,
     columns: [],
@@ -5929,6 +5930,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.$nextTick(this.replaceIcons);
     },
     replaceIcons: function replaceIcons() {
+      var _this6 = this;
+
       document.querySelectorAll('[data-icon]').forEach(function ($icon) {
         var icon = $icon.getAttribute('data-icon'),
             attributes = $icon.getAttributeNames().reduce(function (acc, name) {
@@ -5948,7 +5951,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
           });
           $icon.replaceWith(newElement);
         } else {
-          axios.get('/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
+          axios.get(_this6.app_url + '/vendor/alpine-tables/icons/' + icon + '.svg').then(function (result) {
             window.localStorage.setItem('icon-' + icon, result.data);
             var newElement = document.createElement('template');
             newElement.innerHTML = result.data;
@@ -5977,13 +5980,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
       this.resetPage();
     },
     toggleSearch: function toggleSearch() {
-      var _this6 = this;
+      var _this7 = this;
 
       this.show_search = !this.show_search;
 
       if (this.show_search) {
         this.$nextTick(function () {
-          _this6.$refs.search.focus();
+          _this7.$refs.search.focus();
         });
       } else {
         this.filters.search = '';
