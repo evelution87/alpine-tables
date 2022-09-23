@@ -16,7 +16,8 @@ class AlpineTableComponent extends Component
 	
 	public function __construct( $key, $route, $rule = '' )
 	{
-		$this->tableData = compact( 'key', 'route', 'rule' );
+		$app_url         = config( 'app.url', '' );
+		$this->tableData = compact( 'key', 'app_url', 'route', 'rule' );
 	}
 	
 	public function render()

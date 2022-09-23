@@ -19,6 +19,7 @@ export default function ( data = {} ) {
 			filters: {}
 		} ).as( (data.key || 'alpinetable') + '_filters' ),
 		
+		app_url: data.app_url || '',
 		route: data.route,
 		rule: data.rule || null,
 		columns: [],
@@ -243,7 +244,7 @@ export default function ( data = {} ) {
 					} );
 					$icon.replaceWith( newElement );
 				} else {
-					axios.get( '/vendor/alpine-tables/icons/' + icon + '.svg' )
+					axios.get( this.app_url + '/vendor/alpine-tables/icons/' + icon + '.svg' )
 						.then( result => {
 							window.localStorage.setItem( 'icon-' + icon, result.data );
 							let newElement = document.createElement( 'template' );
