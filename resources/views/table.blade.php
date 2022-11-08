@@ -16,12 +16,12 @@
 			</div>
 			<div x-show="!loading" x-text="pageString()" class="text-sm"></div>
 		</div>
-		<div x-show="show_search || filters.search.length" x-transition.opacity>
+		<div x-show="show_search || filters.search.length" x-transition.opacity x-cloak>
 			<label for="search">Search: </label>
 			<input type="text" x-model.debounce="filters.search" x-ref="search" id="search"
 			       class="bg-transparent outline-none border-0 border-b-2 border-gray-200 focus:ring-0 p-0"/>
 		</div>
-		<div class="relative toolbar">
+		<div class="relative toolbar" x-cloak>
 			<div class="flex border border-gray-200 rounded-md divide-x divide-gray-200 overflow-hidden">
 				<a :title="show_search ? 'Cancel Search':'Search'" class="p-2 transition cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-50"
 				   x-on:click="toggleSearch">
@@ -64,7 +64,7 @@
 		</div>
 	</div>
 	
-	<div class="rounded-md border border-gray-200 overflow-hidden" x-show="results">
+	<div class="rounded-md border border-gray-200 overflow-hidden" x-show="results" x-cloak>
 		<table class="min-w-full divide-y divide-gray-200">
 			<thead class="bg-gray-50">
 			<tr>
@@ -99,7 +99,7 @@
 		</table>
 	</div>
 	
-	<div class="flex justify-between mt-3 text-gray-700 toolbar" x-show="items.length">
+	<div class="flex justify-between mt-3 text-gray-700 toolbar" x-show="items.length" x-cloak>
 		<div>
 			<div x-show="loading" class="flex items-center">
 				<svg class="animate-spin mr-2 h-5 w-5 text-lime-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
