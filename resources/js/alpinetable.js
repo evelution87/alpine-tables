@@ -174,14 +174,22 @@ export default function ( data = {} ) {
 				return '';
 			} else if ( Array.isArray( value ) ) {
 				return value.map( item => this.format( item, format ) ).join( '' );
-			} else if ( 'object' === typeof value ) {
+			} else if ('object' === typeof value) {
 				let output = value.value || value[0] || null;
-				if ( value.link ) {
-					let target = '';
-					if ( 'undefined' !== typeof value.target ) {
-						target = ' target="' + value.target + '"';
+				if (value.link) {
+					const tag = document.createElement('a');
+					tag.classList.add('hover:underline');
+					tag.setAttribute('href', value.link);
+					tag.innerHTML = output;
+					if ('undefined' !== typeof value.target) {
+						tag.setAttribute('target', value.target);
 					}
-					output = '<a href="' + value.link + '" ' + target + ' class="hover:underline">' + output + '</a>';
+					if ('undefined' !== typeof value.abbr) {
+						tag.setAttribute('title', value.abbr);
+					}
+					output = tag.outerHTML;
+				} else if (value.abbr) {
+					output = `<abbr title="${value.abbr}">${output}</abbr>`;
 				}
 				return output;
 			}
