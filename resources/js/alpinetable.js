@@ -1,3 +1,6 @@
+import axios from 'axios';
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
 export default function ( data = {} ) {
 	return {
 		
@@ -92,7 +95,7 @@ export default function ( data = {} ) {
 			} );
 		},
 		getColumns() {
-			window.axios.post( this.route, { get: 'columns' } )
+			axios.post( this.route, { get: 'columns' } )
 				.then( response => {
 					this.columns = response.data;
 					this.loadItems();
@@ -116,9 +119,9 @@ export default function ( data = {} ) {
 			if ( null !== this.cancelToken ) {
 				this.cancelToken.cancel( 'Operation canceled due to new request.' );
 			}
-			this.cancelToken = window.axios.CancelToken.source();
+			this.cancelToken = axios.CancelToken.source();
 			
-			window.axios.post( this.route, data, { cancelToken: this.cancelToken.token } )
+			axios.post( this.route, data, { cancelToken: this.cancelToken.token } )
 				.then( response => {
 					if ( response.data.columns ) {
 						this.columns = response.data.columns;
